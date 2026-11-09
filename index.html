@@ -13,20 +13,25 @@
 header{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--bg);z-index:5}
 h1{font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif;font-size:34px;letter-spacing:4px;text-align:center;font-weight:400;color:var(--acc);margin:0}
 h3{margin:0 0 10px;font-size:16px}
+.pt{font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;letter-spacing:2px;font-weight:400;margin:2px 0 12px}.pt span{color:var(--acc)}
 main{max-width:900px;margin:auto;padding:12px}
 button,select,input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:7px 10px;text-transform:uppercase}
 button{cursor:pointer}button.on{background:var(--acc);color:#05260f;border-color:var(--acc);font-weight:600}
 button.x{color:var(--red);padding:4px 8px}button.pri{background:var(--acc);color:#05260f;font-weight:600;border-color:var(--acc)}
 #burger{font-size:20px;padding:4px 10px;width:44px}
 #veil{display:none;position:fixed;inset:0;background:#0009;z-index:9}
-#side{position:fixed;top:0;left:0;bottom:0;width:230px;background:var(--card);border-right:1px solid var(--bd);transform:translateX(-100%);transition:transform .25s;z-index:10;padding:16px 12px;display:flex;flex-direction:column;gap:8px}
+#side{position:fixed;top:0;left:0;bottom:0;width:250px;background:var(--card);border-right:1px solid var(--bd);transform:translateX(-100%);transition:transform .25s;z-index:10;padding:16px 12px;display:flex;flex-direction:column;gap:6px;overflow-y:auto}
 #side.open{transform:none}#veil.open{display:block}
 #side .sh{font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;letter-spacing:3px;color:var(--mut);margin-bottom:8px}
-#side button{text-align:left;padding:12px}
+#side button{text-align:left;padding:12px;width:100%}
+#side .grp{display:flex;justify-content:space-between;align-items:center}
+#side .grp .chev{transition:transform .2s}#side .grp.open .chev{transform:rotate(180deg);color:var(--acc)}
+#side .sub{display:none;flex-direction:column;gap:4px;margin:0 0 4px 14px;padding-left:10px;border-left:2px solid var(--bd)}
+#side .sub.open{display:flex}
+#side .sub button{padding:9px 12px;font-size:14px;background:var(--bg)}
 .scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px}
 .scroll button{white-space:nowrap}.dot::after{content:" ●";color:var(--acc);font-size:10px}
 .on.dot::after{color:#05260f}
-.seg{display:flex;gap:6px;margin-bottom:12px}.seg button{flex:1;padding:10px 4px;font-size:13px}
 .wkbar{display:flex;gap:8px;align-items:center;margin-bottom:10px}
 .wkbar select{flex:1;font-weight:600;font-size:16px;padding:10px;min-width:0}
 .wkbar button{padding:10px 14px}
@@ -78,11 +83,7 @@ details summary{cursor:pointer;font-weight:600}
 </style></head><body>
 <header><button id="burger" onclick="toggleMenu()" aria-label="Menu">☰</button><h1>DIARY MUSCU</h1><span></span></header>
 <div id="veil" onclick="toggleMenu()"></div>
-<aside id="side"><div class="sh">MENU</div>
-<button id="bT" onclick="go('log')">🏋️ SÉANCES</button>
-<button id="bP" onclick="go('prog')">📈 PROGRÈS</button>
-<button id="bL" onclick="go('lib')">🖼️ BIBLIOTHÈQUE</button>
-<button id="bY" onclick="go('phys')">🧍 PHYSIQUE</button></aside>
+<aside id="side"></aside>
 <main id="m"></main>
 <script>
 const DAYS=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
@@ -116,7 +117,7 @@ if(!D.mig_tjs){
  if(D.state.day=="Lun"||D.state.day=="Mer"||D.state.day=="Ven")D.state.day="Mar";
  localStorage.setItem("muscu2",JSON.stringify(D))}
 const wk=()=>Object.keys(D.weeks).map(Number).sort((a,b)=>a-b);
-let mode="log",W=+D.state.week||wk()[0],day=D.state.day||"Mar",OPEN=null;
+let mode="log",W=+D.state.week||wk()[0],day=D.state.day||"Mar",OPEN=null,MENU=null;
 if(!D.weeks[W])W=wk()[0];
 if(D.done[W]){const n=wk().find(w=>!D.done[w]);if(n)W=n}
 const save=()=>{D.state={week:W,day};localStorage.setItem("muscu2",JSON.stringify(D))};
@@ -125,10 +126,24 @@ const norm=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 function prev(w,ex){for(const x of wk().filter(k=>k<w).reverse())for(const dd of DAYS)for(const e of D.weeks[x][dd].ex)
   if(e.n===ex&&e.sets.some(s=>s.kg!==""||s.reps!==""))return e;return null}
 function dayHas(w,d){return D.weeks[w][d].ex.some(e=>e.sets.some(s=>s.ok||s.reps!==""))}
-function toggleMenu(){document.getElementById('side').classList.toggle('open');document.getElementById('veil').classList.toggle('open')}
-function go(m){mode=m;toggleMenu();render()}
-function render(){save();["bT","bP","bL","bY"].forEach(i=>document.getElementById(i).className="");
- document.getElementById({log:"bT",prog:"bP",lib:"bL",phys:"bY"}[mode]).className="on";({log,prog,lib,phys})[mode]()}
+
+/* ---------- MENU LATÉRAL avec sous-menus déroulants ---------- */
+let PM="max",LT="warm",LOPEN=null,LRUN=0;
+const PMN={max:"Charge max",vol:"Volume",rep:"Reps totales"};
+const LNAME={warm:"Échauffement",ex:"Exercices",str:"Étirements"};
+function side(){const g=(id,ico,label,items,cur,fn)=>`<button class="grp ${MENU==id?'open':''} ${mode==id?'on':''}" onclick="MENU=(MENU==='${id}'?null:'${id}');side()"><span>${ico} ${label}</span><span class="chev">▾</span></button>
+  <div class="sub ${MENU==id?'open':''}">${Object.keys(items).map(k=>`<button class="${mode==id&&cur==k?'on':''}" onclick="${fn}('${k}')">${items[k]}</button>`).join("")}</div>`;
+ document.getElementById("side").innerHTML=`<div class="sh">MENU</div>
+ <button class="${mode=='log'?'on':''}" onclick="go('log')">🏋️ SÉANCES</button>
+ ${g("prog","📈","PROGRÈS",PMN,PM,"subProg")}
+ ${g("lib","🖼️","EXOPICS",LNAME,LT,"subLib")}
+ <button class="${mode=='phys'?'on':''}" onclick="go('phys')">🧍 PHYSIQUE</button>`}
+function toggleMenu(){side();document.getElementById('side').classList.toggle('open');document.getElementById('veil').classList.toggle('open')}
+function closeMenu(){document.getElementById('side').classList.remove('open');document.getElementById('veil').classList.remove('open')}
+function go(m){mode=m;MENU=null;closeMenu();render()}
+function subProg(k){PM=k;mode="prog";MENU="prog";closeMenu();render()}
+function subLib(k){LT=k;LOPEN=null;mode="lib";MENU="lib";closeMenu();render()}
+function render(){save();side();({log,prog,lib,phys})[mode]()}
 
 /* ---------- ÉCHAUFFEMENT (RAMP, change chaque semaine) ---------- */
 const CARDIO=["Rameur","Vélo","Corde à sauter","Tapis en marche rapide incliné","SkiErg ou elliptique","Rameur"];
@@ -213,23 +228,20 @@ function drawLine(id,pts,zero=true){const c=document.getElementById(id);if(!c)re
  pts.forEach((p,i)=>{x.fillStyle="#4ade80";x.beginPath();x.arc(X(i),Y(p[1]),Math.max(3,h/60),0,7);x.fill();x.fillStyle="#e8eaed";x.fillText(p[1],X(i)-fs*.7,Y(p[1])-fs*.7);x.fillStyle="#8b919c";x.fillText(p[0],X(i)-fs*.7,h-pb*.3)})}
 
 /* ---------- PROGRÈS : automatique, sans images ---------- */
-let PM="max";
-const PMN={max:"Charge max (kg)",vol:"Volume (kg)",rep:"Reps totales"};
 function series(name,m){const pts=[];
  wk().forEach(w=>{let v=0,any=false;DAYS.forEach(d=>D.weeks[w][d].ex.filter(x=>x.n==name).forEach(x=>x.sets.forEach(s=>{
   if(s.reps!==""){any=true;const kg=s.kg===""?0:s.kg;if(m=="max")v=Math.max(v,kg);else if(m=="vol")v+=kg*s.reps;else v+=s.reps}})));
   if(any)pts.push(["S"+w,Math.round(v*10)/10])});return pts}
-function setPM(m){PM=m;prog()}
 function prog(){const s=new Set();wk().forEach(w=>DAYS.forEach(d=>D.weeks[w][d].ex.forEach(e=>s.add(e.n))));
  const names=[...s].filter(n=>series(n,"rep").length);
- let h=`<div class="seg">${Object.keys(PMN).map(k=>`<button class="${PM==k?'on':''}" onclick="setPM('${k}')">${PMN[k]}</button>`).join("")}</div>`;
+ let h=`<div class="pt">Progrès · <span>${PMN[PM]}</span></div>`;
  if(!names.length){document.getElementById("m").innerHTML=h+'<div class="card hint">Aucune donnée pour le moment. Dès que tu notes des répétitions dans une séance, la courbe de l\'exercice apparaît ici automatiquement.</div>';return}
  h+=`<div class="pg">${names.map((n,i)=>{const p=series(n,PM),last=p[p.length-1][1],pr=p.length>1?p[p.length-2][1]:null,rec=Math.max(...p.map(q=>q[1]));
   return `<div class="card"><h3>${n}</h3><canvas id="pc${i}" width="480" height="210"></canvas><div class="pk"><span>Dernier<br><b>${last}</b></span><span>Record<br><b>${rec}</b></span><span>Vs préc.<br><b>${pr!=null?delta(last-pr):'–'}</b></span></div></div>`}).join("")}</div>`;
  document.getElementById("m").innerHTML=h;
  names.forEach((n,i)=>drawLine("pc"+i,series(n,PM),true))}
 
-/* ---------- BIBLIOTHÈQUE : images (échauffement / exercices / étirements) ---------- */
+/* ---------- EXOPICS : images, classées par ordre alphabétique ---------- */
 const IMG="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
 const DBURL="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json";
 const FR={"tirage poitrine":"lat pulldown","tirage vertical":"lat pulldown","traction":"pullups","chest press":"chest press","presse a cuisses":"leg press","presse":"leg press",
@@ -257,18 +269,17 @@ function search(q,n=8,pref="strength"){const t=norm(q).split(/[^a-z0-9]+/).filte
 function guess(name,pref){const k=norm(name);let q=null;
  for(const f of Object.keys(FR).sort((a,b)=>b.length-a.length)){if(k.includes(f)){q=FR[f];break}}
  const r=search(q||name,1,pref);return r[0]?r[0].id:null}
+const alpha=(a,b)=>a[0].localeCompare(b[0],"fr",{sensitivity:"base"});
 function libData(){
  const warm=new Map();CARDIO.forEach(c=>warm.set(c,"4 à 5 min"));[...UP,...LOW].forEach(r=>r.forEach(([n,d])=>warm.set(n,d)));
  const ex=new Map();Object.values(TPL).forEach(f=>f().ex.forEach(e=>ex.set(e.n,e.t?e.t+" reps":"")));
  wk().forEach(w=>DAYS.forEach(d=>D.weeks[w][d].ex.forEach(e=>{if(!ex.has(e.n))ex.set(e.n,e.t?e.t+" reps":"")})));
  const st=new Map();Object.values(ST).forEach(([n,d])=>st.set(n,d));
- return {warm:[...warm],ex:[...ex],str:[...st]}}
-let LT="warm",LOPEN=null,LRUN=0;
+ return {warm:[...warm].sort(alpha),ex:[...ex].sort(alpha),str:[...st].sort(alpha)}}
 const LPREF={warm:"any",ex:"strength",str:"stretching"};
-const LNAME={warm:"🔥 Échauffement",ex:"🏋️ Exercices",str:"🧘 Étirements"};
 function lib(){const L=libData(),list=L[LT];
- let h=`<div class="seg">${Object.keys(LNAME).map(k=>`<button class="${LT==k?'on':''}" onclick="LT='${k}';LOPEN=null;lib()">${LNAME[k]}</button>`).join("")}</div>`;
- h+=list.map(([n,d],i)=>{const op=LOPEN===n;
+ let h=`<div class="pt">ExoPics · <span>${LNAME[LT]}</span></div>`;
+ h+=list.map(([n,d])=>{const op=LOPEN===n;
   return `<div class="ac ${op?'open':''}"><button class="ah" data-n="${esc(n)}" onclick="libTg(this.dataset.n)"><span>${n}${d?`<small>${d}</small>`:""}</span><span class="meta"><span class="chev">▾</span></span></button>${op?`<div class="ab"><div id="lsel"></div><div class="bar"><button onclick="libChange()">🔍 Changer l'image</button></div><div id="res"></div></div>`:""}</div>`}).join("");
  h+=`<p class="hint">Images : free-exercise-db (domaine public). Si une image ne correspond pas, utilise « Changer l'image ».</p>`;
  document.getElementById("m").innerHTML=h;if(LOPEN)libShow();libResolve(list)}
