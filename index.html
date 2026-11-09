@@ -39,9 +39,8 @@ button.x{color:var(--red);padding:4px 8px}button.pri{background:var(--acc);color
 .done.ok{border-color:var(--acc)}
 .done input{width:24px;height:24px;accent-color:var(--acc)}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
-.top{display:flex;gap:6px;margin-bottom:8px}.top input{flex:1;min-width:0}.top .t{max-width:110px}
-.ex-name{font-weight:600}
-.set{display:grid;grid-template-columns:28px 1fr 1fr 34px 30px;gap:6px;align-items:center;margin-bottom:5px}
+.sname{font-family:'Bebas Neue',Impact,sans-serif;font-size:24px;letter-spacing:2px;margin:4px 0 2px}
+.set{display:grid;grid-template-columns:28px 1fr 1fr 34px;gap:6px;align-items:center;margin-bottom:5px}
 .set input{width:100%;text-align:center}.set input[type=checkbox]{width:22px;height:22px;accent-color:var(--acc)}
 .lbl{color:var(--mut);font-size:12px;text-align:center}.hint{color:var(--mut);font-size:13px}
 .sum{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 12px;font-size:14px}.sum b{color:var(--acc)}
@@ -177,7 +176,7 @@ const wkey=()=>W+"|"+day;
 function wchk(k,v){D.warm[wkey()]=D.warm[wkey()]||[];D.warm[wkey()][k]=v;save();render()}
 function schk(k,v){D.stretch[wkey()]=D.stretch[wkey()]||[];D.stretch[wkey()][k]=v;save();render()}
 
-/* ---------- SÉANCES ---------- */
+/* ---------- SÉANCES (programme verrouillé : on ne saisit que kg et reps réalisées) ---------- */
 function tg(i){OPEN=(OPEN===i?null:i);render()}
 function checklist(cls,id,icon,title,sub,steps,ck,fn,foot){const n=steps.filter((_,k)=>ck[k]).length,op=OPEN===id;
  return `<div class="ac ${cls} ${op?'open':''} ${n==steps.length?'fin':''}"><button class="ah" onclick="tg(${id})"><span>${icon} ${title}<small>${sub}</small></span><span class="meta"><span class="cnt">${n==steps.length?'✓ ':''}${n}/${steps.length}</span><span class="chev">▾</span></span></button>`+
@@ -185,36 +184,29 @@ function checklist(cls,id,icon,title,sub,steps,ck,fn,foot){const n=steps.filter(
 function log(){
  let h=`<div class="wkbar"><select onchange="W=+this.value;OPEN=null;render()">${wk().map(w=>`<option value="${w}" ${w==W?'selected':''}>Semaine ${w}${D.done[w]?' ✓':''}</option>`).join("")}</select><button onclick="addWeek()" title="Nouvelle semaine">＋</button></div>
  <div class="scroll">${DAYS.map(d=>`<button class="${d==day?'on':''} ${dayHas(W,d)?'dot':''}" onclick="day='${d}';OPEN=null;render()">${d}</button>`).join("")}</div>`;
- const S=D.weeks[W][day];let vol=0,sets=0;S.ex.forEach(e=>e.sets.forEach(s=>{if(s.kg!==""&&s.reps!==""){vol+=s.kg*s.reps;sets++}}));
- h+=`<div class="top"><input value="${esc(S.name)}" onchange="D.weeks[W][day].name=this.value;save()" placeholder="Nom de la séance"><button class="x" onclick="clearDay()" title="Vider">🗑</button></div>
- <div class="sum"><span>Séries : <b>${sets}</b></span><span>Volume : <b>${vol}</b> kg</span></div>`;
+ const S=D.weeks[W][day];let sets=0;S.ex.forEach(e=>e.sets.forEach(s=>{if(s.reps!=="")sets++}));
+ h+=`<div class="sname">${S.name}</div>`;
+ if(!S.ex.length)h+=`<div class="card hint">Jour de repos. Profite de la récupération !</div>`;
+ else h+=`<div class="sum"><span>Séries réalisées : <b>${sets}</b></span></div>`;
  if(S.ex.length)h+=checklist("wu",-1,"🔥","Échauffement","Semaine "+W+" · environ 10 min",warmup(),D.warm[wkey()]||[],"wchk","Méthode RAMP : monter la température, activer/mobiliser, puis potentialiser. L'échauffement change chaque semaine.");
  S.ex.forEach((e,i)=>{const p=prev(W,e.n),filled=e.sets.filter(s=>s.reps!=="").length,all=e.sets.length&&filled==e.sets.length,op=OPEN===i;
   h+=`<div class="ac ${op?'open':''} ${all?'fin':''}"><button class="ah" onclick="tg(${i})"><span>${e.n}${e.t?`<small>Objectif : ${e.t} reps</small>`:""}</span><span class="meta"><span class="cnt">${all?'✓ ':''}${filled}/${e.sets.length}</span><span class="chev">▾</span></span></button>`;
   if(op){
-   h+=`<div class="ab"><div class="top"><input class="ex-name" value="${esc(e.n)}" onchange="upd(${i},'n',this.value)"><input class="t" value="${esc(e.t)}" onchange="upd(${i},'t',this.value)" placeholder="objectif"><button class="x" onclick="delEx(${i})">✕</button></div>
-   <div class="set"><span></span><span class="lbl">kg</span><span class="lbl">reps</span><span class="lbl">✓</span><span></span></div>`;
+   h+=`<div class="ab"><div class="set"><span></span><span class="lbl">kg</span><span class="lbl">reps</span><span class="lbl">✓</span></div>`;
    e.sets.forEach((s,k)=>{const q=p&&p.sets[k];
-    h+=`<div class="set"><span class="lbl">${k+1}</span><input type="number" step="0.5" value="${s.kg}" placeholder="${q&&q.kg!==''?q.kg:''}" onchange="setv(${i},${k},'kg',this.value)"><input type="number" value="${s.reps}" placeholder="${q&&q.reps!==''?q.reps:''}" onchange="setv(${i},${k},'reps',this.value)"><input type="checkbox" ${s.ok?'checked':''} onchange="setv(${i},${k},'ok',this.checked)"><button class="x" onclick="delSet(${i},${k})">−</button></div>`});
-   h+=`<button onclick="addSet(${i})">＋ série</button> ${p?`<span class="hint">Placeholders = semaine précédente</span>`:""}</div>`}
+    h+=`<div class="set"><span class="lbl">${k+1}</span><input type="number" step="0.5" value="${s.kg}" placeholder="${q&&q.kg!==''?q.kg:''}" onchange="setv(${i},${k},'kg',this.value)"><input type="number" value="${s.reps}" placeholder="${q&&q.reps!==''?q.reps:''}" onchange="setv(${i},${k},'reps',this.value)"><input type="checkbox" ${s.ok?'checked':''} onchange="setv(${i},${k},'ok',this.checked)"></div>`});
+   h+=p?`<div class="hint">Chiffres gris = semaine précédente</div>`:"";h+=`</div>`}
   h+=`</div>`});
  if(S.ex.length)h+=checklist("st",-2,"🧘","Étirements","Fin de séance · environ 8 min",stretches(),D.stretch[wkey()]||[],"schk","Étirements doux en fin de séance : tiens chaque position sans douleur, en respirant calmement.");
- h+=`<button class="pri" onclick="addEx()">＋ Ajouter un exercice</button>
- <label class="done ${D.done[W]?'ok':''}"><input type="checkbox" ${D.done[W]?'checked':''} onchange="markDone(this.checked)"><span>Semaine ${W} terminée</span></label>`;
+ h+=`<label class="done ${D.done[W]?'ok':''}"><input type="checkbox" ${D.done[W]?'checked':''} onchange="markDone(this.checked)"><span>Semaine ${W} terminée</span></label>`;
  document.getElementById("m").innerHTML=h}
 function markDone(v){D.done[W]=v;if(!v)delete D.done[W];
  if(v){const n=wk().find(w=>w>W&&!D.done[w])||wk().find(w=>!D.done[w]);if(n&&confirm("Semaine "+W+" terminée ! Passer à la semaine "+n+" ?")){W=n;day="Mar";OPEN=null}}
  render()}
 const cd=()=>D.weeks[W][day];
-function upd(i,f,v){cd().ex[i][f]=v;save();if(f=="n")render()}
 function setv(i,k,f,v){cd().ex[i].sets[k][f]=(f=="ok")?v:(v===""?"":+v);save();render()}
-function addSet(i){const s=cd().ex[i].sets,l=s[s.length-1]||{kg:"",reps:""};s.push({kg:l.kg,reps:"",ok:false});save();render()}
-function delSet(i,k){cd().ex[i].sets.splice(k,1);save();render()}
-function delEx(i){if(confirm("Supprimer cet exercice ?")){cd().ex.splice(i,1);OPEN=null;save();render()}}
-function addEx(){const n=prompt("Nom de l'exercice ?");if(n){cd().ex.push(E(n,3,""));OPEN=cd().ex.length-1;save();render()}}
-function clearDay(){if(confirm("Vider ce jour (repos) ?")){D.weeks[W][day]={name:"Repos",ex:[]};OPEN=null;save();render()}}
 function addWeek(){const n=Math.max(...wk())+1;D.weeks[n]=JSON.parse(JSON.stringify(D.weeks[n-1]));
- Object.values(D.weeks[n]).forEach(s=>s.ex.forEach(e=>e.sets.forEach(x=>{x.reps="";x.ok=false})));W=n;OPEN=null;render()}
+ Object.values(D.weeks[n]).forEach(s=>s.ex.forEach(e=>e.sets.forEach(x=>{x.kg=x.kg;x.reps="";x.ok=false})));W=n;OPEN=null;render()}
 
 /* ---------- graphique générique ---------- */
 function drawLine(id,pts,zero=true){const c=document.getElementById(id);if(!c)return;const x=c.getContext("2d"),w=c.width,h=c.height;x.clearRect(0,0,w,h);
