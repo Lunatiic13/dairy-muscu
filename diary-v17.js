@@ -49,3 +49,18 @@ let lastRaw=localStorage.getItem('muscu2');setInterval(()=>{const raw=localStora
 setInterval(async()=>{const r=X.reminders,d=new Date(),h=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');if(!r.on||!r.days.includes(d.getDay())||h!==r.time||X.reminded===date())return;X.reminded=date();persist();const msg=document.createElement('p');msg.className='extra-msg';msg.textContent='C’est l’heure de ton entraînement.';root.prepend(msg);if('Notification'in window&&Notification.permission==='granted'){try{const reg=await navigator.serviceWorker?.ready;await reg?.showNotification('Diary Muscu',{body:'C’est l’heure de ton entraînement.'})}catch{}}},15000);
 backup();panel();if(mode==='log')log();requestWake();
 })();
+;(()=>{
+const panel=document.getElementById('extra'),menu=document.getElementById('side'),main=document.getElementById('m');if(!panel||!menu||!main)return;
+let active=null;
+const names=['Réglages','Régularité','Records personnels','Photos de progression','Rappels d’entraînement','Sauvegardes'];
+const title=document.createElement('h2');title.className='pt';panel.before(title);title.hidden=true;
+function show(){const outer=panel.querySelector(':scope > details');if(!outer)return;
+main.hidden=active!==null;panel.hidden=active===null;title.hidden=active===null;
+if(active===null)return;title.textContent=names[active];outer.open=true;outer.style.cssText='border:0;background:transparent;padding:0;margin:0';
+const groups=[...outer.children].filter(e=>e.tagName==='DETAILS');
+[...outer.children].forEach(e=>{if(e.tagName==='SUMMARY'){e.hidden=true;return}if(e.tagName==='DETAILS'){const selected=groups.indexOf(e)+1===active;e.hidden=!selected;e.open=selected;const summary=e.querySelector(':scope > summary');if(summary)summary.hidden=selected}else e.hidden=active!==0});
+}
+function nav(){if(menu.querySelector('[data-diary-nav]'))return;const box=document.createElement('div');box.dataset.diaryNav='1';box.style.cssText='display:flex;flex-direction:column;gap:6px;margin-top:6px';names.forEach((name,i)=>{const b=document.createElement('button');b.textContent=name;b.dataset.diaryPage=i;b.onclick=()=>{active=i;menu.classList.remove('open');document.getElementById('veil')?.classList.remove('open');show()};box.append(b)});menu.append(box)}
+menu.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&!b.hasAttribute('data-diary-page')){active=null;show()}},true);
+new MutationObserver(nav).observe(menu,{childList:true});new MutationObserver(show).observe(panel,{childList:true});nav();show();
+})();
