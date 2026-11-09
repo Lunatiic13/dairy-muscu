@@ -60,7 +60,7 @@ canvas{width:100%;height:auto;background:var(--bg);border-radius:12px;border:1px
 .wr input{width:24px;height:24px;accent-color:var(--acc);flex:none}
 .wr span{font-size:14px;font-weight:600}.wr small{display:block;color:var(--mut);font-weight:400;font-size:11px;margin-top:2px}
 .wr.ck span{color:var(--mut);text-decoration:line-through}
-.big{display:grid;grid-template-columns:1fr 1fr;gap:8px}.big img{width:100%;border-radius:10px;background:#262b35;aspect-ratio:4/3;object-fit:cover;cursor:zoom-in}
+.big{display:grid;grid-template-columns:1fr 1fr;gap:8px}.big.one{grid-template-columns:1fr}.big img{width:100%;border-radius:10px;background:#262b35;aspect-ratio:4/3;object-fit:cover;cursor:zoom-in}
 .zh{color:var(--mut);font-size:11px;margin-top:6px;text-align:center}
 #lb{display:none;position:fixed;inset:0;background:#000e;z-index:50;flex-direction:column;align-items:center;justify-content:center;padding:12px;gap:10px}
 #lb.open{display:flex}
@@ -126,6 +126,10 @@ if(D.done[W]){const n=wk().find(w=>!D.done[w]);if(n)W=n}
 const save=()=>{D.state={week:W,day};localStorage.setItem("muscu2",JSON.stringify(D))};
 const esc=s=>String(s).replace(/"/g,"&quot;");
 const norm=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+/* exercices chronométrés (secondes) et images à afficher */
+const isTime=n=>norm(n).includes("gainage");
+const unit=n=>isTime(n)?"s":"reps";
+const onlyIdx=n=>isTime(n)?1:null;
 function prev(w,ex){for(const x of wk().filter(k=>k<w).reverse())for(const dd of DAYS)for(const e of D.weeks[x][dd].ex)
   if(e.n===ex&&e.sets.some(s=>s.kg!==""||s.reps!==""))return e;return null}
 function dayHas(w,d){return D.weeks[w][d].ex.some(e=>e.sets.some(s=>s.ok||s.reps!==""))}
@@ -180,7 +184,7 @@ const wkey=()=>W+"|"+day;
 function wchk(k,v){D.warm[wkey()]=D.warm[wkey()]||[];D.warm[wkey()][k]=v;save();render()}
 function schk(k,v){D.stretch[wkey()]=D.stretch[wkey()]||[];D.stretch[wkey()][k]=v;save();render()}
 
-/* ---------- SÉANCES (programme verrouillé : on ne saisit que kg et reps réalisées) ---------- */
+/* ---------- SÉANCES (programme verrouillé : on ne saisit que kg et reps/secondes réalisées) ---------- */
 function tg(i){OPEN=(OPEN===i?null:i);render()}
 function checklist(cls,id,icon,title,sub,steps,ck,fn,foot){const n=steps.filter((_,k)=>ck[k]).length,op=OPEN===id;
  return `<div class="ac ${cls} ${op?'open':''} ${n==steps.length?'fin':''}"><button class="ah" onclick="tg(${id})"><span>${icon} ${title}<small>${sub}</small></span><span class="meta"><span class="cnt">${n==steps.length?'✓ ':''}${n}/${steps.length}</span><span class="chev">▾</span></span></button>`+
@@ -193,10 +197,10 @@ function log(){
  if(!S.ex.length)h+=`<div class="card hint">Jour de repos. Profite de la récupération !</div>`;
  else h+=`<div class="sum"><span>Séries réalisées : <b>${sets}</b></span></div>`;
  if(S.ex.length)h+=checklist("wu",-1,"🔥","Échauffement","Semaine "+W+" · environ 10 min",warmup(),D.warm[wkey()]||[],"wchk","Méthode RAMP : monter la température, activer/mobiliser, puis potentialiser. L'échauffement change chaque semaine.");
- S.ex.forEach((e,i)=>{const p=prev(W,e.n),filled=e.sets.filter(s=>s.reps!=="").length,all=e.sets.length&&filled==e.sets.length,op=OPEN===i;
-  h+=`<div class="ac ${op?'open':''} ${all?'fin':''}"><button class="ah" onclick="tg(${i})"><span>${e.n}${e.t?`<small>Objectif : ${e.t} reps</small>`:""}</span><span class="meta"><span class="cnt">${all?'✓ ':''}${filled}/${e.sets.length}</span><span class="chev">▾</span></span></button>`;
+ S.ex.forEach((e,i)=>{const p=prev(W,e.n),filled=e.sets.filter(s=>s.reps!=="").length,all=e.sets.length&&filled==e.sets.length,op=OPEN===i,u=unit(e.n);
+  h+=`<div class="ac ${op?'open':''} ${all?'fin':''}"><button class="ah" onclick="tg(${i})"><span>${e.n}${e.t?`<small>Objectif : ${e.t} ${u}</small>`:""}</span><span class="meta"><span class="cnt">${all?'✓ ':''}${filled}/${e.sets.length}</span><span class="chev">▾</span></span></button>`;
   if(op){
-   h+=`<div class="ab"><div class="set"><span></span><span class="lbl">kg</span><span class="lbl">reps</span><span class="lbl">✓</span></div>`;
+   h+=`<div class="ab"><div class="set"><span></span><span class="lbl">kg</span><span class="lbl">${isTime(e.n)?'secondes':'reps'}</span><span class="lbl">✓</span></div>`;
    e.sets.forEach((s,k)=>{const q=p&&p.sets[k];
     h+=`<div class="set"><span class="lbl">${k+1}</span><input type="number" step="0.5" value="${s.kg}" placeholder="${q&&q.kg!==''?q.kg:''}" onchange="setv(${i},${k},'kg',this.value)"><input type="number" value="${s.reps}" placeholder="${q&&q.reps!==''?q.reps:''}" onchange="setv(${i},${k},'reps',this.value)"><input type="checkbox" ${s.ok?'checked':''} onchange="setv(${i},${k},'ok',this.checked)"></div>`});
    h+=p?`<div class="hint">Chiffres gris = semaine précédente</div>`:"";h+=`</div>`}
@@ -237,7 +241,7 @@ function prog(){const s=new Set();wk().forEach(w=>DAYS.forEach(d=>D.weeks[w][d].
  const p=series(PEX,PM),last=p[p.length-1][1],pr=p.length>1?p[p.length-2][1]:null,rec=Math.max(...p.map(q=>q[1]));
  h+=`<div class="wkbar"><select onchange="pickEx(this.value)">${names.map(n=>`<option ${n==PEX?'selected':''}>${n}</option>`).join("")}</select></div>
  <div class="card"><canvas id="pc" width="760" height="300"></canvas>
- <div class="pk"><div>Dernier<b>${last}</b></div><div>Record<b>${rec}</b></div><div>Vs préc.<b>${pr!=null?delta(last-pr):'–'}</b></div></div></div>`;
+ <div class="pk"><div>Dernier<b>${last}</b></div><div>Record<b>${rec}</b></div><div>Vs préc.<b>${pr!=null?delta(last-pr):'–'}</b></div></div>${PM=="rep"&&isTime(PEX)?'<div class="hint" style="margin-top:8px">Exercice chronométré : valeurs en secondes.</div>':''}</div>`;
  document.getElementById("m").innerHTML=h;drawLine("pc",p,true)}
 
 /* ---------- EXOPICS : images, classées par ordre alphabétique ---------- */
@@ -271,8 +275,8 @@ function guess(name,pref){const k=norm(name);let q=null;
 const alpha=(a,b)=>a[0].localeCompare(b[0],"fr",{sensitivity:"base"});
 function libData(){
  const warm=new Map();CARDIO.forEach(c=>warm.set(c,"4 à 5 min"));[...UP,...LOW].forEach(r=>r.forEach(([n,d])=>warm.set(n,d)));
- const ex=new Map();Object.values(TPL).forEach(f=>f().ex.forEach(e=>ex.set(e.n,e.t?e.t+" reps":"")));
- wk().forEach(w=>DAYS.forEach(d=>D.weeks[w][d].ex.forEach(e=>{if(!ex.has(e.n))ex.set(e.n,e.t?e.t+" reps":"")})));
+ const ex=new Map();Object.values(TPL).forEach(f=>f().ex.forEach(e=>ex.set(e.n,e.t?e.t+" "+unit(e.n):"")));
+ wk().forEach(w=>DAYS.forEach(d=>D.weeks[w][d].ex.forEach(e=>{if(!ex.has(e.n))ex.set(e.n,e.t?e.t+" "+unit(e.n):"")})));
  const st=new Map();Object.values(ST).forEach(([n,d])=>st.set(n,d));
  return {warm:[...warm].sort(alpha),ex:[...ex].sort(alpha),str:[...st].sort(alpha)}}
 const LPREF={warm:"any",ex:"strength",str:"stretching"};
@@ -283,18 +287,18 @@ function lib(){const L=libData(),list=L[LT];
  h+=`<p class="hint">Images : free-exercise-db (domaine public).</p>`;
  document.getElementById("m").innerHTML=h;if(LOPEN)libShow();libResolve(list)}
 function libTg(n){LOPEN=(LOPEN===n?null:n);lib()}
-function libShow(){const el=document.getElementById("lsel");if(!el||!LOPEN)return;const id=D.imgs[LOPEN];
- el.innerHTML=id?`<div class="big"><img alt="" src="${IMG}${id}/0.jpg" onclick="zoom(0)"><img alt="" src="${IMG}${id}/1.jpg" onclick="zoom(1)"></div><div class="zh">Touche une image pour l'agrandir</div>`:`<div class="hint">Recherche de l'image…</div>`}
+function libShow(){const el=document.getElementById("lsel");if(!el||!LOPEN)return;const id=D.imgs[LOPEN],o=onlyIdx(LOPEN);
+ el.innerHTML=id?(o!=null?`<div class="big one"><img alt="" src="${IMG}${id}/${o}.jpg" onclick="zoom(${o})"></div>`:`<div class="big"><img alt="" src="${IMG}${id}/0.jpg" onclick="zoom(0)"><img alt="" src="${IMG}${id}/1.jpg" onclick="zoom(1)"></div>`)+`<div class="zh">Touche une image pour l'agrandir</div>`:`<div class="hint">Recherche de l'image…</div>`}
 async function libResolve(list){const run=++LRUN;
  try{for(const [n] of list){if(run!=LRUN)return;if(D.imgs[n])continue;await loadDB();const id=guess(n,LPREF[LT]);
   if(id){D.imgs[n]=id;save();if(n===LOPEN)libShow()}}}
  catch(e){const el=document.getElementById("lsel");if(el&&!D.imgs[LOPEN])el.innerHTML='<div class="hint">Images indisponibles (connexion requise)</div>'}}
 /* ---------- zoom plein écran ---------- */
 let LBK=0;
-function lbSet(){const id=D.imgs[LOPEN];if(!id)return;document.getElementById("lbi").src=IMG+id+"/"+LBK+".jpg";
- document.getElementById("lbc").textContent=LOPEN+" · "+(LBK==0?"position de départ":"position d'arrivée")+" · touche l'image pour passer à l'autre"}
+function lbSet(){const id=D.imgs[LOPEN];if(!id)return;const o=onlyIdx(LOPEN);document.getElementById("lbi").src=IMG+id+"/"+LBK+".jpg";
+ document.getElementById("lbc").textContent=o!=null?LOPEN:LOPEN+" · "+(LBK==0?"position de départ":"position d'arrivée")+" · touche l'image pour passer à l'autre"}
 function zoom(k){if(!D.imgs[LOPEN])return;LBK=k;lbSet();document.getElementById("lb").classList.add("open")}
-function lbNext(){LBK=LBK?0:1;lbSet()}
+function lbNext(){if(onlyIdx(LOPEN)!=null)return;LBK=LBK?0:1;lbSet()}
 function lbClose(){document.getElementById("lb").classList.remove("open")}
 document.addEventListener("keydown",e=>{if(e.key=="Escape")lbClose();if(e.key=="ArrowRight"||e.key=="ArrowLeft")lbNext()});
 
