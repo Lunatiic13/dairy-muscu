@@ -43,11 +43,17 @@ canvas{width:100%;height:auto;aspect-ratio:760/240;background:var(--bg);border-r
 .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
 .ac{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:8px;overflow:hidden}
 .ac.open{border-color:var(--acc)}.ac.fin .ah .cnt{color:var(--acc)}
+.ac.wu{border-left:4px solid var(--org)}.ac.wu.open{border-color:var(--acc);border-left-color:var(--org)}
 .ah{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;background:none;border:0;border-radius:0;padding:14px;font-weight:600;font-size:15px}
 .ah small{display:block;color:var(--mut);font-weight:400;font-size:11px;margin-top:2px}
 .ah .meta{display:flex;align-items:center;gap:10px;white-space:nowrap}.cnt{color:var(--mut);font-size:13px}
 .chev{transition:transform .2s;color:var(--mut)}.ac.open .chev{transform:rotate(180deg);color:var(--acc)}
 .ab{display:none;padding:0 14px 14px}.ac.open .ab{display:block}
+.wr{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--bd);cursor:pointer}
+.wr:first-child{border-top:0}
+.wr input{width:24px;height:24px;accent-color:var(--acc);flex:none}
+.wr span{font-size:14px;font-weight:600}.wr small{display:block;color:var(--mut);font-weight:400;font-size:11px;margin-top:2px}
+.wr.ck span{color:var(--mut);text-decoration:line-through}
 .big{display:grid;grid-template-columns:1fr 1fr;gap:8px}.big img{width:100%;border-radius:10px;background:#262b35;aspect-ratio:4/3;object-fit:cover}
 #res{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:8px}
 .gc{background:var(--bg);border:2px solid var(--bd);border-radius:10px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
@@ -90,9 +96,8 @@ function makeWeek(w){const d={};DAYS.forEach(x=>d[x]={name:"Repos",ex:[]});
  return d}
 let D=JSON.parse(localStorage.getItem("muscu2")||"null");
 if(!D){D={weeks:{}};for(let w=1;w<=6;w++)D.weeks[w]=makeWeek(w)}
-D.done=D.done||{};D.state=D.state||{};D.imgs=D.imgs||{};
+D.done=D.done||{};D.state=D.state||{};D.imgs=D.imgs||{};D.warm=D.warm||{};
 D.body=D.body||{p:{prenom:"",nom:"",age:"",taille:"",cible:""},w:{}};
-/* migration unique : semaines 1-2 passent de Lun/Mer/Ven à Mar/Jeu/Sam (données conservées) */
 if(!D.mig_tjs){
  [1,2].forEach(w=>{const o=D.weeks[w];if(!o)return;
   const empty=d=>!o[d]||!o[d].ex||o[d].ex.length==0;
@@ -118,6 +123,28 @@ function go(m){mode=m;toggleMenu();render()}
 function render(){save();["bT","bP","bY"].forEach(i=>document.getElementById(i).className="");
  document.getElementById({log:"bT",prog:"bP",phys:"bY"}[mode]).className="on";({log,prog,phys})[mode]()}
 
+/* ---------- ÉCHAUFFEMENT (méthode RAMP, change chaque semaine) ---------- */
+const CARDIO=["Rameur","Vélo","Corde à sauter","Tapis en marche rapide incliné","SkiErg ou elliptique","Rameur"];
+const UP=[
+ [["Cercles de bras","10 dans chaque sens"],["Pull-aparts à l'élastique","15 reps"],["Rotations externes à l'élastique","12 par côté, coude collé"]],
+ [["Wall slides (glissés au mur)","10 reps"],["Ouvertures thoraciques à genoux","8 par côté"],["Tractions scapulaires (suspendu)","8 reps"]],
+ [["Cat-cow","8 reps"],["Shoulder dislocates (élastique ou bâton)","10 reps"],["Pompes progressives (mains surélevées)","8 reps"]],
+ [["Cercles d'épaules","10 dans chaque sens"],["Rotations thoraciques","8 par côté"],["Rowing élastique léger","15 reps"]],
+ [["Balanciers de bras croisés","10 reps"],["Pull-aparts à l'élastique","15 reps"],["Rotations externes coude à 90°","12 par côté"]],
+ [["Planche dynamique","30 s"],["Ouvertures thoraciques à genoux","8 par côté"],["Élévations Y-T-W légères","8 reps chacune"]]];
+const LOW=[
+ [["Fentes dynamiques avant","8 par jambe"],["Leg swings avant-arrière","10 par jambe"],["Pont fessier","12 reps"]],
+ [["Squat goblet avec pause 2 s","8 reps"],["Rotations de hanche 90/90","6 par côté"],["Cercles de chevilles","10 par côté"]],
+ [["World's greatest stretch","5 par côté"],["Fentes arrière","6 par jambe"],["Pont fessier 1 jambe","8 par jambe"]],
+ [["Leg swings latéraux","10 par jambe"],["Squat au poids du corps","12 reps"],["Mobilité de cheville au mur","10 par côté"]],
+ [["Cat-cow","8 reps"],["Good morning poids du corps","10 reps"],["Fentes latérales","6 par côté"]],
+ [["Squat profond tenu","30 s"],["Pont fessier","12 reps"],["Marche latérale avec élastique","10 pas par côté"]]];
+function warmup(){const i=(W-1)%6,low=norm(D.weeks[W][day].name).includes("bas"),full=norm(D.weeks[W][day].name).includes("full");
+ const mid=(low?LOW:UP)[i].slice();if(full&&!low)mid.push(["Squat au poids du corps","10 reps"]);
+ return [["R · Monter la température",CARDIO[i]+" · 4 à 5 min, effort modéré (60-70 %)"],...mid.map(x=>["A/M · "+x[0],x[1]]),["P · Séries de montée","2-3 séries sur ton 1er exercice : charge croissante, reps décroissantes"]]}
+const wkey=()=>W+"|"+day;
+function wchk(k,v){D.warm[wkey()]=D.warm[wkey()]||[];D.warm[wkey()][k]=v;save();render()}
+
 /* ---------- SÉANCES ---------- */
 function tg(i){OPEN=(OPEN===i?null:i);render()}
 function log(){
@@ -126,6 +153,10 @@ function log(){
  const S=D.weeks[W][day];let vol=0,sets=0;S.ex.forEach(e=>e.sets.forEach(s=>{if(s.kg!==""&&s.reps!==""){vol+=s.kg*s.reps;sets++}}));
  h+=`<div class="top"><input value="${esc(S.name)}" onchange="D.weeks[W][day].name=this.value;save()" placeholder="Nom de la séance"><button class="x" onclick="clearDay()" title="Vider">🗑</button></div>
  <div class="sum"><span>Séries : <b>${sets}</b></span><span>Volume : <b>${vol}</b> kg</span></div>`;
+ if(S.ex.length){const steps=warmup(),ck=D.warm[wkey()]||[],n=steps.filter((_,k)=>ck[k]).length,op=OPEN===-1;
+  h+=`<div class="ac wu ${op?'open':''} ${n==steps.length?'fin':''}"><button class="ah" onclick="tg(-1)"><span>🔥 Échauffement<small>Semaine ${W} · environ 10 min</small></span><span class="meta"><span class="cnt">${n==steps.length?'✓ ':''}${n}/${steps.length}</span><span class="chev">▾</span></span></button>`;
+  if(op)h+=`<div class="ab">${steps.map((s,k)=>`<label class="wr ${ck[k]?'ck':''}"><input type="checkbox" ${ck[k]?'checked':''} onchange="wchk(${k},this.checked)"><span>${s[0]}<small>${s[1]}</small></span></label>`).join("")}<p class="hint" style="margin:10px 0 0">Méthode RAMP : monter la température, activer/mobiliser, puis potentialiser. L'échauffement change chaque semaine.</p></div>`;
+  h+=`</div>`}
  S.ex.forEach((e,i)=>{const p=prev(W,e.n),filled=e.sets.filter(s=>s.reps!=="").length,all=e.sets.length&&filled==e.sets.length,op=OPEN===i;
   h+=`<div class="ac ${op?'open':''} ${all?'fin':''}"><button class="ah" onclick="tg(${i})"><span>${e.n}${e.t?`<small>Objectif : ${e.t} reps</small>`:""}</span><span class="meta"><span class="cnt">${all?'✓ ':''}${filled}/${e.sets.length}</span><span class="chev">▾</span></span></button>`;
   if(op){
@@ -247,7 +278,7 @@ function drawBody(){const T=+P().taille||0,m=document.getElementById("bm").value
  const pts=wk().filter(w=>BW()[w]!=null).map(w=>["S"+w,m=="w"?BW()[w]:(T?Math.round(bmi(BW()[w],T)*10)/10:null)]).filter(p=>p[1]!=null);
  drawLine("bc",pts,false)}
 function exp(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(D)],{type:"application/json"}));a.download="diary-muscu-"+new Date().toISOString().slice(0,10)+".json";a.click()}
-function imp(i){const r=new FileReader();r.onload=()=>{try{D=JSON.parse(r.result);D.done=D.done||{};D.state=D.state||{};D.imgs=D.imgs||{};D.body=D.body||{p:{prenom:"",nom:"",age:"",taille:"",cible:""},w:{}};W=wk()[0];save();alert("Importé ✅");render()}catch{alert("Fichier invalide")}};r.readAsText(i.files[0])}
+function imp(i){const r=new FileReader();r.onload=()=>{try{D=JSON.parse(r.result);D.done=D.done||{};D.state=D.state||{};D.imgs=D.imgs||{};D.warm=D.warm||{};D.body=D.body||{p:{prenom:"",nom:"",age:"",taille:"",cible:""},w:{}};W=wk()[0];save();alert("Importé ✅");render()}catch{alert("Fichier invalide")}};r.readAsText(i.files[0])}
 render();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script></body></html>
