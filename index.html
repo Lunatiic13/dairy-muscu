@@ -85,15 +85,27 @@ const TPL={
 };
 function makeWeek(w){const d={};DAYS.forEach(x=>d[x]={name:"Repos",ex:[]});
  const set=(day,k)=>d[day]=TPL[k]();
- if(w<=2){set("Lun","FA");set("Mer","FB");set("Ven","FA")}
+ if(w<=2){set("Mar","FA");set("Jeu","FB");set("Sam","FA")}
  else{set("Lun","HA");set("Mar","BA");set("Jeu","HB");set("Sam","HC")}
  return d}
 let D=JSON.parse(localStorage.getItem("muscu2")||"null");
 if(!D){D={weeks:{}};for(let w=1;w<=6;w++)D.weeks[w]=makeWeek(w)}
 D.done=D.done||{};D.state=D.state||{};D.imgs=D.imgs||{};
 D.body=D.body||{p:{prenom:"",nom:"",age:"",taille:"",cible:""},w:{}};
+/* migration unique : semaines 1-2 passent de Lun/Mer/Ven à Mar/Jeu/Sam (données conservées) */
+if(!D.mig_tjs){
+ [1,2].forEach(w=>{const o=D.weeks[w];if(!o)return;
+  const empty=d=>!o[d]||!o[d].ex||o[d].ex.length==0;
+  if(empty("Mar")&&empty("Jeu")&&empty("Sam")){
+   const n={};DAYS.forEach(d=>n[d]={name:"Repos",ex:[]});
+   const mp={Lun:"Mar",Mer:"Jeu",Ven:"Sam"};
+   if(o.Dim)n.Dim=o.Dim;Object.keys(mp).forEach(d=>{if(o[d])n[mp[d]]=o[d]});
+   D.weeks[w]=n}});
+ D.mig_tjs=true;
+ if(D.state.day=="Lun"||D.state.day=="Mer"||D.state.day=="Ven")D.state.day="Mar";
+ localStorage.setItem("muscu2",JSON.stringify(D))}
 const wk=()=>Object.keys(D.weeks).map(Number).sort((a,b)=>a-b);
-let mode="log",W=+D.state.week||wk()[0],day=D.state.day||"Lun",OPEN=null;
+let mode="log",W=+D.state.week||wk()[0],day=D.state.day||"Mar",OPEN=null;
 if(!D.weeks[W])W=wk()[0];
 if(D.done[W]){const n=wk().find(w=>!D.done[w]);if(n)W=n}
 const save=()=>{D.state={week:W,day};localStorage.setItem("muscu2",JSON.stringify(D))};
@@ -106,7 +118,7 @@ function go(m){mode=m;toggleMenu();render()}
 function render(){save();["bT","bP","bY"].forEach(i=>document.getElementById(i).className="");
  document.getElementById({log:"bT",prog:"bP",phys:"bY"}[mode]).className="on";({log,prog,phys})[mode]()}
 
-/* ---------- SÉANCES : exercices en onglets repliables ---------- */
+/* ---------- SÉANCES ---------- */
 function tg(i){OPEN=(OPEN===i?null:i);render()}
 function log(){
  let h=`<div class="wkbar"><select onchange="W=+this.value;OPEN=null;render()">${wk().map(w=>`<option value="${w}" ${w==W?'selected':''}>Semaine ${w}${D.done[w]?' ✓':''}</option>`).join("")}</select><button onclick="addWeek()" title="Nouvelle semaine">＋</button></div>
@@ -127,7 +139,7 @@ function log(){
  <label class="done ${D.done[W]?'ok':''}"><input type="checkbox" ${D.done[W]?'checked':''} onchange="markDone(this.checked)"><span>Semaine ${W} terminée</span></label>`;
  document.getElementById("m").innerHTML=h}
 function markDone(v){D.done[W]=v;if(!v)delete D.done[W];
- if(v){const n=wk().find(w=>w>W&&!D.done[w])||wk().find(w=>!D.done[w]);if(n&&confirm("Semaine "+W+" terminée ! Passer à la semaine "+n+" ?")){W=n;day="Lun";OPEN=null}}
+ if(v){const n=wk().find(w=>w>W&&!D.done[w])||wk().find(w=>!D.done[w]);if(n&&confirm("Semaine "+W+" terminée ! Passer à la semaine "+n+" ?")){W=n;day="Mar";OPEN=null}}
  render()}
 const cd=()=>D.weeks[W][day];
 function upd(i,f,v){cd().ex[i][f]=v;save();if(f=="n")render()}
@@ -140,7 +152,7 @@ function clearDay(){if(confirm("Vider ce jour (repos) ?")){D.weeks[W][day]={name
 function addWeek(){const n=Math.max(...wk())+1;D.weeks[n]=JSON.parse(JSON.stringify(D.weeks[n-1]));
  Object.values(D.weeks[n]).forEach(s=>s.ex.forEach(e=>e.sets.forEach(x=>{x.reps="";x.ok=false})));W=n;OPEN=null;render()}
 
-/* ---------- graphique générique ---------- */
+/* ---------- graphique ---------- */
 function drawLine(id,pts,zero=true){const c=document.getElementById(id);if(!c)return;const x=c.getContext("2d");x.clearRect(0,0,760,240);
  if(!pts.length){x.fillStyle="#8b919c";x.font="14px sans-serif";x.fillText("PAS ENCORE DE DONNÉES",20,30);return}
  let lo=Math.min(...pts.map(p=>p[1])),hi=Math.max(...pts.map(p=>p[1]));
@@ -150,7 +162,7 @@ function drawLine(id,pts,zero=true){const c=document.getElementById(id);if(!c)re
  x.strokeStyle="#4ade80";x.lineWidth=2.5;x.beginPath();pts.forEach((p,i)=>i?x.lineTo(X(i),Y(p[1])):x.moveTo(X(i),Y(p[1])));x.stroke();
  x.font="12px sans-serif";pts.forEach((p,i)=>{x.fillStyle="#4ade80";x.beginPath();x.arc(X(i),Y(p[1]),4,0,7);x.fill();x.fillStyle="#e8eaed";x.fillText(p[1],X(i)-10,Y(p[1])-10);x.fillStyle="#8b919c";x.fillText(p[0],X(i)-8,226)})}
 
-/* ---------- PROGRÈS : menu déroulant + images ---------- */
+/* ---------- PROGRÈS ---------- */
 const IMG="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
 const DBURL="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json";
 const FR={"tirage poitrine":"lat pulldown","tirage vertical":"lat pulldown","traction":"pullups","chest press":"chest press","presse a cuisses":"leg press","presse":"leg press",
