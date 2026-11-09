@@ -29,7 +29,7 @@ button.x{color:var(--red);padding:4px 8px}button.pri{background:var(--acc);color
 .wkbar{display:flex;gap:8px;align-items:center;margin-bottom:10px}
 .wkbar select{flex:1;font-weight:600;font-size:16px;padding:10px;min-width:0}
 .wkbar button{padding:10px 14px}
-.done{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-top:4px}
+.done{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-top:12px}
 .done.ok{border-color:var(--acc)}
 .done input{width:24px;height:24px;accent-color:var(--acc)}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
@@ -41,6 +41,13 @@ button.x{color:var(--red);padding:4px 8px}button.pri{background:var(--acc);color
 .sum{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 12px;font-size:14px}.sum b{color:var(--acc)}
 canvas{width:100%;height:auto;aspect-ratio:760/240;background:var(--bg);border-radius:12px;border:1px solid var(--bd)}
 .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.ac{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:8px;overflow:hidden}
+.ac.open{border-color:var(--acc)}.ac.fin .ah .cnt{color:var(--acc)}
+.ah{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;background:none;border:0;border-radius:0;padding:14px;font-weight:600;font-size:15px}
+.ah small{display:block;color:var(--mut);font-weight:400;font-size:11px;margin-top:2px}
+.ah .meta{display:flex;align-items:center;gap:10px;white-space:nowrap}.cnt{color:var(--mut);font-size:13px}
+.chev{transition:transform .2s;color:var(--mut)}.ac.open .chev{transform:rotate(180deg);color:var(--acc)}
+.ab{display:none;padding:0 14px 14px}.ac.open .ab{display:block}
 .big{display:grid;grid-template-columns:1fr 1fr;gap:8px}.big img{width:100%;border-radius:10px;background:#262b35;aspect-ratio:4/3;object-fit:cover}
 #res{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:8px}
 .gc{background:var(--bg);border:2px solid var(--bd);border-radius:10px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
@@ -86,7 +93,7 @@ if(!D){D={weeks:{}};for(let w=1;w<=6;w++)D.weeks[w]=makeWeek(w)}
 D.done=D.done||{};D.state=D.state||{};D.imgs=D.imgs||{};
 D.body=D.body||{p:{prenom:"",nom:"",age:"",taille:"",cible:""},w:{}};
 const wk=()=>Object.keys(D.weeks).map(Number).sort((a,b)=>a-b);
-let mode="log",W=+D.state.week||wk()[0],day=D.state.day||"Lun";
+let mode="log",W=+D.state.week||wk()[0],day=D.state.day||"Lun",OPEN=null;
 if(!D.weeks[W])W=wk()[0];
 if(D.done[W]){const n=wk().find(w=>!D.done[w]);if(n)W=n}
 const save=()=>{D.state={week:W,day};localStorage.setItem("muscu2",JSON.stringify(D))};
@@ -98,34 +105,40 @@ function toggleMenu(){document.getElementById('side').classList.toggle('open');d
 function go(m){mode=m;toggleMenu();render()}
 function render(){save();["bT","bP","bY"].forEach(i=>document.getElementById(i).className="");
  document.getElementById({log:"bT",prog:"bP",phys:"bY"}[mode]).className="on";({log,prog,phys})[mode]()}
+
+/* ---------- SÉANCES : exercices en onglets repliables ---------- */
+function tg(i){OPEN=(OPEN===i?null:i);render()}
 function log(){
- let h=`<div class="wkbar"><select onchange="W=+this.value;render()">${wk().map(w=>`<option value="${w}" ${w==W?'selected':''}>Semaine ${w}${D.done[w]?' ✓':''}</option>`).join("")}</select><button onclick="addWeek()" title="Nouvelle semaine">＋</button></div>
- <div class="scroll">${DAYS.map(d=>`<button class="${d==day?'on':''} ${dayHas(W,d)?'dot':''}" onclick="day='${d}';render()">${d}</button>`).join("")}</div>`;
+ let h=`<div class="wkbar"><select onchange="W=+this.value;OPEN=null;render()">${wk().map(w=>`<option value="${w}" ${w==W?'selected':''}>Semaine ${w}${D.done[w]?' ✓':''}</option>`).join("")}</select><button onclick="addWeek()" title="Nouvelle semaine">＋</button></div>
+ <div class="scroll">${DAYS.map(d=>`<button class="${d==day?'on':''} ${dayHas(W,d)?'dot':''}" onclick="day='${d}';OPEN=null;render()">${d}</button>`).join("")}</div>`;
  const S=D.weeks[W][day];let vol=0,sets=0;S.ex.forEach(e=>e.sets.forEach(s=>{if(s.kg!==""&&s.reps!==""){vol+=s.kg*s.reps;sets++}}));
  h+=`<div class="top"><input value="${esc(S.name)}" onchange="D.weeks[W][day].name=this.value;save()" placeholder="Nom de la séance"><button class="x" onclick="clearDay()" title="Vider">🗑</button></div>
  <div class="sum"><span>Séries : <b>${sets}</b></span><span>Volume : <b>${vol}</b> kg</span></div>`;
- S.ex.forEach((e,i)=>{const p=prev(W,e.n);
-  h+=`<div class="card"><div class="top"><input class="ex-name" value="${esc(e.n)}" onchange="upd(${i},'n',this.value)"><input class="t" value="${esc(e.t)}" onchange="upd(${i},'t',this.value)" placeholder="objectif"><button class="x" onclick="delEx(${i})">✕</button></div>
-  <div class="set"><span></span><span class="lbl">kg</span><span class="lbl">reps</span><span class="lbl">✓</span><span></span></div>`;
-  e.sets.forEach((s,k)=>{const q=p&&p.sets[k];
-   h+=`<div class="set"><span class="lbl">${k+1}</span><input type="number" step="0.5" value="${s.kg}" placeholder="${q&&q.kg!==''?q.kg:''}" onchange="setv(${i},${k},'kg',this.value)"><input type="number" value="${s.reps}" placeholder="${q&&q.reps!==''?q.reps:''}" onchange="setv(${i},${k},'reps',this.value)"><input type="checkbox" ${s.ok?'checked':''} onchange="setv(${i},${k},'ok',this.checked)"><button class="x" onclick="delSet(${i},${k})">−</button></div>`});
-  h+=`<button onclick="addSet(${i})">＋ série</button> ${p?`<span class="hint">Placeholders = semaine précédente</span>`:""}</div>`});
+ S.ex.forEach((e,i)=>{const p=prev(W,e.n),filled=e.sets.filter(s=>s.reps!=="").length,all=e.sets.length&&filled==e.sets.length,op=OPEN===i;
+  h+=`<div class="ac ${op?'open':''} ${all?'fin':''}"><button class="ah" onclick="tg(${i})"><span>${e.n}${e.t?`<small>Objectif : ${e.t} reps</small>`:""}</span><span class="meta"><span class="cnt">${all?'✓ ':''}${filled}/${e.sets.length}</span><span class="chev">▾</span></span></button>`;
+  if(op){
+   h+=`<div class="ab"><div class="top"><input class="ex-name" value="${esc(e.n)}" onchange="upd(${i},'n',this.value)"><input class="t" value="${esc(e.t)}" onchange="upd(${i},'t',this.value)" placeholder="objectif"><button class="x" onclick="delEx(${i})">✕</button></div>
+   <div class="set"><span></span><span class="lbl">kg</span><span class="lbl">reps</span><span class="lbl">✓</span><span></span></div>`;
+   e.sets.forEach((s,k)=>{const q=p&&p.sets[k];
+    h+=`<div class="set"><span class="lbl">${k+1}</span><input type="number" step="0.5" value="${s.kg}" placeholder="${q&&q.kg!==''?q.kg:''}" onchange="setv(${i},${k},'kg',this.value)"><input type="number" value="${s.reps}" placeholder="${q&&q.reps!==''?q.reps:''}" onchange="setv(${i},${k},'reps',this.value)"><input type="checkbox" ${s.ok?'checked':''} onchange="setv(${i},${k},'ok',this.checked)"><button class="x" onclick="delSet(${i},${k})">−</button></div>`});
+   h+=`<button onclick="addSet(${i})">＋ série</button> ${p?`<span class="hint">Placeholders = semaine précédente</span>`:""}</div>`}
+  h+=`</div>`});
  h+=`<button class="pri" onclick="addEx()">＋ Ajouter un exercice</button>
  <label class="done ${D.done[W]?'ok':''}"><input type="checkbox" ${D.done[W]?'checked':''} onchange="markDone(this.checked)"><span>Semaine ${W} terminée</span></label>`;
  document.getElementById("m").innerHTML=h}
 function markDone(v){D.done[W]=v;if(!v)delete D.done[W];
- if(v){const n=wk().find(w=>w>W&&!D.done[w])||wk().find(w=>!D.done[w]);if(n&&confirm("Semaine "+W+" terminée ! Passer à la semaine "+n+" ?")){W=n;day="Lun"}}
+ if(v){const n=wk().find(w=>w>W&&!D.done[w])||wk().find(w=>!D.done[w]);if(n&&confirm("Semaine "+W+" terminée ! Passer à la semaine "+n+" ?")){W=n;day="Lun";OPEN=null}}
  render()}
 const cd=()=>D.weeks[W][day];
 function upd(i,f,v){cd().ex[i][f]=v;save();if(f=="n")render()}
 function setv(i,k,f,v){cd().ex[i].sets[k][f]=(f=="ok")?v:(v===""?"":+v);save();render()}
 function addSet(i){const s=cd().ex[i].sets,l=s[s.length-1]||{kg:"",reps:""};s.push({kg:l.kg,reps:"",ok:false});save();render()}
 function delSet(i,k){cd().ex[i].sets.splice(k,1);save();render()}
-function delEx(i){if(confirm("Supprimer cet exercice ?")){cd().ex.splice(i,1);save();render()}}
-function addEx(){const n=prompt("Nom de l'exercice ?");if(n){cd().ex.push(E(n,3,""));save();render()}}
-function clearDay(){if(confirm("Vider ce jour (repos) ?")){D.weeks[W][day]={name:"Repos",ex:[]};save();render()}}
+function delEx(i){if(confirm("Supprimer cet exercice ?")){cd().ex.splice(i,1);OPEN=null;save();render()}}
+function addEx(){const n=prompt("Nom de l'exercice ?");if(n){cd().ex.push(E(n,3,""));OPEN=cd().ex.length-1;save();render()}}
+function clearDay(){if(confirm("Vider ce jour (repos) ?")){D.weeks[W][day]={name:"Repos",ex:[]};OPEN=null;save();render()}}
 function addWeek(){const n=Math.max(...wk())+1;D.weeks[n]=JSON.parse(JSON.stringify(D.weeks[n-1]));
- Object.values(D.weeks[n]).forEach(s=>s.ex.forEach(e=>e.sets.forEach(x=>{x.reps="";x.ok=false})));W=n;render()}
+ Object.values(D.weeks[n]).forEach(s=>s.ex.forEach(e=>e.sets.forEach(x=>{x.reps="";x.ok=false})));W=n;OPEN=null;render()}
 
 /* ---------- graphique générique ---------- */
 function drawLine(id,pts,zero=true){const c=document.getElementById(id);if(!c)return;const x=c.getContext("2d");x.clearRect(0,0,760,240);
@@ -183,7 +196,7 @@ const P=()=>D.body.p, BW=()=>D.body.w;
 const bmi=(kg,cm)=>(kg&&cm)?kg/((cm/100)**2):null;
 const f1=v=>v==null?"–":(Math.round(v*10)/10).toString().replace(".",",");
 function cat(b){if(b==null)return["–","#8b919c"];if(b<18.5)return["Insuffisance pondérale","#60a5fa"];if(b<25)return["Corpulence normale","#4ade80"];if(b<30)return["Surpoids","#fbbf24"];return["Obésité","#f87171"]}
-function delta(d){if(d==null||isNaN(d))return"–";const r=Math.round(d*10)/10;return r==0?"=":`<span class="${r>0?'up':'dn'}">${r>0?'▲ +':'▼ '}${f1(Math.abs(r)).replace(/^/,r<0?'-':'')}</span>`.replace("▼ --","▼ -")}
+function delta(d){if(d==null||isNaN(d))return"–";const r=Math.round(d*10)/10;if(r==0)return"=";return r>0?`<span class="up">▲ +${f1(r)}</span>`:`<span class="dn">▼ -${f1(-r)}</span>`}
 function setP(k,v){P()[k]=v;save();phys()}
 function setW(w,v){if(v==="")delete BW()[w];else BW()[w]=+v;save();phys()}
 function phys(){const p=P(),T=+p.taille||0,ws=wk(),have=ws.filter(w=>BW()[w]!=null);
