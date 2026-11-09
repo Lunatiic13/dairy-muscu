@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DIARY MUSCU</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Diary Muscu">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');</style>
+<style>
+:root{--bg:#0f1115;--card:#1a1d24;--acc:#4ade80;--tx:#e8eaed;--mut:#8b919c;--bd:#2a2f3a;--red:#f87171}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx);text-transform:uppercase;letter-spacing:.3px}
+header{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--bg);z-index:5}
+h1{font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif;font-size:34px;letter-spacing:4px;text-align:center;font-weight:400;color:var(--acc);margin:0}
+main{max-width:820px;margin:auto;padding:12px}
+button,select,input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:7px 10px;text-transform:uppercase}
+button{cursor:pointer}button.on{background:var(--acc);color:#05260f;border-color:var(--acc);font-weight:600}
+button.x{color:var(--red);padding:4px 8px}button.pri{background:var(--acc);color:#05260f;font-weight:600;border-color:var(--acc)}
+#burger{font-size:20px;padding:4px 10px;width:44px}
+#veil{display:none;position:fixed;inset:0;background:#0009;z-index:9}
+#side{position:fixed;top:0;left:0;bottom:0;width:230px;background:var(--card);border-right:1px solid var(--bd);transform:translateX(-100%);transition:transform .25s;z-index:10;padding:16px 12px;display:flex;flex-direction:column;gap:8px}
+#side.open{transform:none}#veil.open{display:block}
+#side .sh{font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;letter-spacing:3px;color:var(--mut);margin-bottom:8px}
+#side button{text-align:left;padding:12px}
+.scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px}
+.scroll button{white-space:nowrap}.dot::after{content:" ●";color:var(--acc);font-size:10px}
+.on.dot::after{color:#05260f}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+.top{display:flex;gap:6px;margin-bottom:8px}.top input{flex:1;min-width:0}.top .t{max-width:110px}
+.ex-name{font-weight:600}
+.set{display:grid;grid-template-columns:28px 1fr 1fr 34px 30px;gap:6px;align-items:center;margin-bottom:5px}
+.set input{width:100%;text-align:center}.set input[type=checkbox]{width:22px;height:22px;accent-color:var(--acc)}
+.lbl{color:var(--mut);font-size:12px;text-align:center}.hint{color:var(--mut);font-size:13px}
+.sum{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 12px;font-size:14px}.sum b{color:var(--acc)}
+canvas{width:100%;height:240px;background:var(--card);border-radius:12px;border:1px solid var(--bd)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+</style></head><body>
+<header><button id="burger" onclick="toggleMenu()" aria-label="Menu">☰</button><h1>DIARY MUSCU</h1><span></span></header>
+<div id="veil" onclick="toggleMenu()"></div>
+<aside id="side"><div class="sh">MENU</div>
+<button id="bT" onclick="go('log')">🏋️ SÉANCES</button>
+<button id="bP" onclick="go('prog')">📈 PROGRÈS</button>
+<button id="bD" onclick="go('data')">💾 DONNÉES</button></aside>
+<main id="m"></main>
+<script>
+const DAYS=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+const E=(n,s,t)=>({n,t,sets:Array.from({length:s},()=>({kg:"",reps:"",ok:false}))});
+const TPL={
+ FA:()=>({name:"Full body A",ex:[E("Tirage poitrine",3,"12-15"),E("Chest press",3,"12-15"),E("Presse à cuisses",3,"12-15"),E("Développé épaules machine",3,"12-15"),E("Curl",3,"12-15"),E("Gainage (s)",3,"30-40")]}),
+ FB:()=>({name:"Full body B",ex:[E("Rowing poulie basse",3,"12-15"),E("Développé couché haltères",3,"12-15"),E("Fente arrière",3,"12"),E("Oiseau (pec deck inversé)",3,"15"),E("Triceps poulie",3,"12-15")]}),
+ HA:()=>({name:"Haut A (pousser)",ex:[E("Développé couché haltères",4,"8-12"),E("Rowing unilatéral",3,"10-12"),E("Développé épaules assis",3,"8-12"),E("Curl haltères",2,"12-15")]}),
+ BA:()=>({name:"Bas",ex:[E("Squat ou presse",3,"8-12"),E("Soulevé de terre roumain léger",3,"10"),E("Leg curl",3,"12"),E("Mollets",3,"15"),E("Gainage (s)",3,"40")]}),
+ HB:()=>({name:"Haut B (tirer)",ex:[E("Tractions / tirage vertical",4,"8-10"),E("Pompes / développé incliné",3,"8-15"),E("Rowing buste penché",3,"10-12"),E("Élévations latérales",3,"12-15"),E("Extension triceps",2,"12-15")]}),
+ HC:()=>({name:"Haut C (épaules/bras)",ex:[E("Développé militaire",3,"8-10"),E("Élévations latérales",4,"12-15"),E("Oiseau",3,"15"),E("Dips",3,"8-12"),E("Curl incliné",3,"10-12")]})
+};
+function makeWeek(w){const d={};DAYS.forEach(x=>d[x]={name:"Repos",ex:[]});
+ const set=(day,k)=>d[day]=TPL[k]();
+ if(w<=2){set("Lun","FA");set("Mer","FB");set("Ven","FA")}
+ else{set("Lun","HA");set("Mar","BA");set("Jeu","HB");set("Sam","HC")}
+ return d}
+let D=JSON.parse(localStorage.getItem("muscu2")||"null");
+if(!D){D={weeks:{}};for(let w=1;w<=6;w++)D.weeks[w]=makeWeek(w)}
+let mode="log",W=1,day="Lun";
+const save=()=>localStorage.setItem("muscu2",JSON.stringify(D));
+const esc=s=>String(s).replace(/"/g,"&quot;");
+const wk=()=>Object.keys(D.weeks).map(Number).sort((a,b)=>a-b);
+function prev(w,ex){for(const x of wk().filter(k=>k<w).reverse())for(const dd of DAYS)for(const e of D.weeks[x][dd].ex)
+  if(e.n===ex&&e.sets.some(s=>s.kg!==""||s.reps!==""))return e;return null}
+function dayHas(w,d){return D.weeks[w][d].ex.some(e=>e.sets.some(s=>s.ok||s.reps!==""))}
+function toggleMenu(){document.getElementById('side').classList.toggle('open');document.getElementById('veil').classList.toggle('open')}
+function go(m){mode=m;toggleMenu();render()}
+function render(){["bT","bP","bD"].forEach(i=>document.getElementById(i).className="");
+ document.getElementById({log:"bT",prog:"bP",data:"bD"}[mode]).className="on";({log,prog,data})[mode]()}
+function log(){
+ let h=`<div class="scroll">${wk().map(w=>`<button class="${w==W?'on':''}" onclick="W=${w};render()">Sem ${w}</button>`).join("")}<button onclick="addWeek()">＋</button></div>
+ <div class="scroll">${DAYS.map(d=>`<button class="${d==day?'on':''} ${dayHas(W,d)?'dot':''}" onclick="day='${d}';render()">${d}</button>`).join("")}</div>`;
+ const S=D.weeks[W][day];let vol=0,sets=0;S.ex.forEach(e=>e.sets.forEach(s=>{if(s.kg!==""&&s.reps!==""){vol+=s.kg*s.reps;sets++}}));
+ h+=`<div class="top"><input value="${esc(S.name)}" onchange="D.weeks[W][day].name=this.value;save()" placeholder="Nom de la séance"><button class="x" onclick="clearDay()" title="Vider">🗑</button></div>
+ <div class="sum"><span>Séries : <b>${sets}</b></span><span>Volume : <b>${vol}</b> kg</span></div>`;
+ S.ex.forEach((e,i)=>{const p=prev(W,e.n);
+  h+=`<div class="card"><div class="top"><input class="ex-name" value="${esc(e.n)}" onchange="upd(${i},'n',this.value)"><input class="t" value="${esc(e.t)}" onchange="upd(${i},'t',this.value)" placeholder="objectif"><button class="x" onclick="delEx(${i})">✕</button></div>
+  <div class="set"><span></span><span class="lbl">kg</span><span class="lbl">reps</span><span class="lbl">✓</span><span></span></div>`;
+  e.sets.forEach((s,k)=>{const q=p&&p.sets[k];
+   h+=`<div class="set"><span class="lbl">${k+1}</span><input type="number" step="0.5" value="${s.kg}" placeholder="${q&&q.kg!==''?q.kg:''}" onchange="setv(${i},${k},'kg',this.value)"><input type="number" value="${s.reps}" placeholder="${q&&q.reps!==''?q.reps:''}" onchange="setv(${i},${k},'reps',this.value)"><input type="checkbox" ${s.ok?'checked':''} onchange="setv(${i},${k},'ok',this.checked)"><button class="x" onclick="delSet(${i},${k})">−</button></div>`});
+  h+=`<button onclick="addSet(${i})">＋ série</button> ${p?`<span class="hint">Placeholders = semaine précédente</span>`:""}</div>`});
+ h+=`<button class="pri" onclick="addEx()">＋ Ajouter un exercice</button>`;
+ document.getElementById("m").innerHTML=h}
+const cd=()=>D.weeks[W][day];
+function upd(i,f,v){cd().ex[i][f]=v;save();if(f=="n")render()}
+function setv(i,k,f,v){cd().ex[i].sets[k][f]=(f=="ok")?v:(v===""?"":+v);save();render()}
+function addSet(i){const s=cd().ex[i].sets,l=s[s.length-1]||{kg:"",reps:""};s.push({kg:l.kg,reps:"",ok:false});save();render()}
+function delSet(i,k){cd().ex[i].sets.splice(k,1);save();render()}
+function delEx(i){if(confirm("Supprimer cet exercice ?")){cd().ex.splice(i,1);save();render()}}
+function addEx(){const n=prompt("Nom de l'exercice ?");if(n){cd().ex.push(E(n,3,""));save();render()}}
+function clearDay(){if(confirm("Vider ce jour (repos) ?")){D.weeks[W][day]={name:"Repos",ex:[]};save();render()}}
+function addWeek(){const n=Math.max(...wk())+1;D.weeks[n]=JSON.parse(JSON.stringify(D.weeks[n-1]));
+ Object.values(D.weeks[n]).forEach(s=>s.ex.forEach(e=>e.sets.forEach(x=>{x.reps="";x.ok=false})));W=n;save();render()}
+function prog(){const ex=new Set();wk().forEach(w=>DAYS.forEach(d=>D.weeks[w][d].ex.forEach(e=>ex.add(e.n))));
+ document.getElementById("m").innerHTML=`<div class="bar"><select id="pe" onchange="draw()">${[...ex].map(e=>`<option>${e}</option>`).join("")}</select>
+ <select id="pm" onchange="draw()"><option value="max">Charge max</option><option value="vol">Volume</option><option value="rep">Reps totales</option></select></div><canvas id="cv" width="760" height="240"></canvas><div id="pr" class="hint" style="margin-top:8px"></div>`;draw()}
+function draw(){const e=document.getElementById("pe").value,m=document.getElementById("pm").value,pts=[];
+ wk().forEach(w=>{let v=0,any=false;DAYS.forEach(d=>D.weeks[w][d].ex.filter(x=>x.n==e).forEach(x=>x.sets.forEach(s=>{
+  if(s.reps!==""){any=true;const kg=s.kg===""?0:s.kg;if(m=="max")v=Math.max(v,kg);else if(m=="vol")v+=kg*s.reps;else v+=s.reps}})));if(any)pts.push(["S"+w,v])});
+ const x=document.getElementById("cv").getContext("2d");x.clearRect(0,0,760,240);
+ if(!pts.length){x.fillStyle="#8b919c";x.fillText("PAS ENCORE DE DONNÉES",20,30);document.getElementById("pr").textContent="";return}
+ const mx=Math.max(...pts.map(p=>p[1]))*1.15||1,X=i=>50+(pts.length>1?i*(660/(pts.length-1)):330),Y=v=>205-v/mx*170;
+ x.strokeStyle="#4ade80";x.lineWidth=2;x.beginPath();pts.forEach((p,i)=>i?x.lineTo(X(i),Y(p[1])):x.moveTo(X(i),Y(p[1])));x.stroke();
+ x.font="12px sans-serif";pts.forEach((p,i)=>{x.fillStyle="#4ade80";x.beginPath();x.arc(X(i),Y(p[1]),4,0,7);x.fill();x.fillStyle="#e8eaed";x.fillText(p[1],X(i)-8,Y(p[1])-9);x.fillStyle="#8b919c";x.fillText(p[0],X(i)-8,226)});
+ document.getElementById("pr").textContent="Meilleur : "+Math.max(...pts.map(p=>p[1]))}
+function data(){document.getElementById("m").innerHTML=`<div class="card"><h3>Sauvegarde</h3><p class="hint">Les données restent dans ce navigateur. Exporte-les régulièrement.</p>
+ <button class="pri" onclick="exp()">Exporter JSON</button> <input type="file" accept=".json" onchange="imp(this)"></div>
+ <div class="card"><button class="x" onclick="if(confirm('Tout réinitialiser ?')){localStorage.removeItem('muscu2');location.reload()}">Réinitialiser le programme</button></div>`}
+function exp(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(D)],{type:"application/json"}));a.download="diary-muscu-"+new Date().toISOString().slice(0,10)+".json";a.click()}
+function imp(i){const r=new FileReader();r.onload=()=>{try{D=JSON.parse(r.result);save();W=wk()[0];alert("Importé ✅");render()}catch{alert("Fichier invalide")}};r.readAsText(i.files[0])}
+render();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script></body></html>
