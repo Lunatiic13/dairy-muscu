@@ -66,9 +66,9 @@ canvas{width:100%;height:auto;background:var(--bg);border-radius:12px;border:1px
 .gc{background:var(--bg);border:2px solid var(--bd);border-radius:10px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
 .gc img{width:100%;aspect-ratio:1;object-fit:cover;background:#262b35;display:block}
 .gc span{font-size:10px;padding:4px 5px;line-height:1.2;min-height:28px}
-.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
-.pg .card{margin:0}.pg h3{font-size:14px;margin-bottom:6px}
-.pk{display:flex;justify-content:space-between;gap:6px;font-size:12px;margin-top:8px;color:var(--mut)}.pk b{color:var(--tx);font-size:14px}
+.pk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.pk div{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px;text-align:center;font-size:11px;color:var(--mut)}
+.pk b{display:block;color:var(--tx);font-size:20px;margin-top:4px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .grid2 label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--mut)}
 .grid2 input{width:100%;font-size:15px;color:var(--tx)}
@@ -128,8 +128,8 @@ function prev(w,ex){for(const x of wk().filter(k=>k<w).reverse())for(const dd of
 function dayHas(w,d){return D.weeks[w][d].ex.some(e=>e.sets.some(s=>s.ok||s.reps!==""))}
 
 /* ---------- MENU LATÉRAL avec sous-menus déroulants ---------- */
-let PM="max",LT="warm",LOPEN=null,LRUN=0;
-const PMN={max:"Charge max",vol:"Volume",rep:"Reps totales"};
+let PM="max",PEX=null,LT="warm",LOPEN=null,LRUN=0;
+const PMN={max:"Charge max",rep:"Reps totales"};
 const LNAME={warm:"Échauffement",ex:"Exercices",str:"Étirements"};
 function side(){const g=(id,ico,label,items,cur,fn)=>`<button class="grp ${MENU==id?'open':''} ${mode==id?'on':''}" onclick="MENU=(MENU==='${id}'?null:'${id}');side()"><span>${ico} ${label}</span><span class="chev">▾</span></button>
   <div class="sub ${MENU==id?'open':''}">${Object.keys(items).map(k=>`<button class="${mode==id&&cur==k?'on':''}" onclick="${fn}('${k}')">${items[k]}</button>`).join("")}</div>`;
@@ -227,19 +227,22 @@ function drawLine(id,pts,zero=true){const c=document.getElementById(id);if(!c)re
  x.strokeStyle="#4ade80";x.lineWidth=Math.max(2,h/90);x.beginPath();pts.forEach((p,i)=>i?x.lineTo(X(i),Y(p[1])):x.moveTo(X(i),Y(p[1])));x.stroke();
  pts.forEach((p,i)=>{x.fillStyle="#4ade80";x.beginPath();x.arc(X(i),Y(p[1]),Math.max(3,h/60),0,7);x.fill();x.fillStyle="#e8eaed";x.fillText(p[1],X(i)-fs*.7,Y(p[1])-fs*.7);x.fillStyle="#8b919c";x.fillText(p[0],X(i)-fs*.7,h-pb*.3)})}
 
-/* ---------- PROGRÈS : automatique, sans images ---------- */
+/* ---------- PROGRÈS : menu défilant, un exercice à la fois ---------- */
 function series(name,m){const pts=[];
  wk().forEach(w=>{let v=0,any=false;DAYS.forEach(d=>D.weeks[w][d].ex.filter(x=>x.n==name).forEach(x=>x.sets.forEach(s=>{
-  if(s.reps!==""){any=true;const kg=s.kg===""?0:s.kg;if(m=="max")v=Math.max(v,kg);else if(m=="vol")v+=kg*s.reps;else v+=s.reps}})));
+  if(s.reps!==""){any=true;const kg=s.kg===""?0:s.kg;if(m=="max")v=Math.max(v,kg);else v+=s.reps}})));
   if(any)pts.push(["S"+w,Math.round(v*10)/10])});return pts}
+function pickEx(n){PEX=n;prog()}
 function prog(){const s=new Set();wk().forEach(w=>DAYS.forEach(d=>D.weeks[w][d].ex.forEach(e=>s.add(e.n))));
- const names=[...s].filter(n=>series(n,"rep").length);
+ const names=[...s].filter(n=>series(n,"rep").length).sort((a,b)=>a.localeCompare(b,"fr",{sensitivity:"base"}));
  let h=`<div class="pt">Progrès · <span>${PMN[PM]}</span></div>`;
  if(!names.length){document.getElementById("m").innerHTML=h+'<div class="card hint">Aucune donnée pour le moment. Dès que tu notes des répétitions dans une séance, la courbe de l\'exercice apparaît ici automatiquement.</div>';return}
- h+=`<div class="pg">${names.map((n,i)=>{const p=series(n,PM),last=p[p.length-1][1],pr=p.length>1?p[p.length-2][1]:null,rec=Math.max(...p.map(q=>q[1]));
-  return `<div class="card"><h3>${n}</h3><canvas id="pc${i}" width="480" height="210"></canvas><div class="pk"><span>Dernier<br><b>${last}</b></span><span>Record<br><b>${rec}</b></span><span>Vs préc.<br><b>${pr!=null?delta(last-pr):'–'}</b></span></div></div>`}).join("")}</div>`;
- document.getElementById("m").innerHTML=h;
- names.forEach((n,i)=>drawLine("pc"+i,series(n,PM),true))}
+ if(!names.includes(PEX))PEX=names[0];
+ const p=series(PEX,PM),last=p[p.length-1][1],pr=p.length>1?p[p.length-2][1]:null,rec=Math.max(...p.map(q=>q[1]));
+ h+=`<div class="wkbar"><select onchange="pickEx(this.value)">${names.map(n=>`<option ${n==PEX?'selected':''}>${n}</option>`).join("")}</select></div>
+ <div class="card"><canvas id="pc" width="760" height="300"></canvas>
+ <div class="pk"><div>Dernier<b>${last}</b></div><div>Record<b>${rec}</b></div><div>Vs préc.<b>${pr!=null?delta(last-pr):'–'}</b></div></div></div>`;
+ document.getElementById("m").innerHTML=h;drawLine("pc",p,true)}
 
 /* ---------- EXOPICS : images, classées par ordre alphabétique ---------- */
 const IMG="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
