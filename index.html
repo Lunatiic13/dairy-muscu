@@ -8,12 +8,12 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');</style>
 <style>
-:root{--bg:#0f1115;--card:#1a1d24;--acc:#4ade80;--tx:#e8eaed;--mut:#8b919c;--bd:#2a2f3a;--red:#f87171;--org:#fbbf24}
+:root{--bg:#0f1115;--card:#1a1d24;--acc:#4ade80;--tx:#e8eaed;--mut:#8b919c;--bd:#2a2f3a;--red:#f87171;--org:#fbbf24;--blu:#60a5fa}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx);text-transform:uppercase;letter-spacing:.3px}
 header{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--bg);z-index:5}
 h1{font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif;font-size:34px;letter-spacing:4px;text-align:center;font-weight:400;color:var(--acc);margin:0}
 h3{margin:0 0 10px;font-size:16px}
-main{max-width:820px;margin:auto;padding:12px}
+main{max-width:900px;margin:auto;padding:12px}
 button,select,input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:7px 10px;text-transform:uppercase}
 button{cursor:pointer}button.on{background:var(--acc);color:#05260f;border-color:var(--acc);font-weight:600}
 button.x{color:var(--red);padding:4px 8px}button.pri{background:var(--acc);color:#05260f;font-weight:600;border-color:var(--acc)}
@@ -26,6 +26,7 @@ button.x{color:var(--red);padding:4px 8px}button.pri{background:var(--acc);color
 .scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px}
 .scroll button{white-space:nowrap}.dot::after{content:" ●";color:var(--acc);font-size:10px}
 .on.dot::after{color:#05260f}
+.seg{display:flex;gap:6px;margin-bottom:12px}.seg button{flex:1;padding:10px 4px;font-size:13px}
 .wkbar{display:flex;gap:8px;align-items:center;margin-bottom:10px}
 .wkbar select{flex:1;font-weight:600;font-size:16px;padding:10px;min-width:0}
 .wkbar button{padding:10px 14px}
@@ -39,11 +40,12 @@ button.x{color:var(--red);padding:4px 8px}button.pri{background:var(--acc);color
 .set input{width:100%;text-align:center}.set input[type=checkbox]{width:22px;height:22px;accent-color:var(--acc)}
 .lbl{color:var(--mut);font-size:12px;text-align:center}.hint{color:var(--mut);font-size:13px}
 .sum{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 12px;font-size:14px}.sum b{color:var(--acc)}
-canvas{width:100%;height:auto;aspect-ratio:760/240;background:var(--bg);border-radius:12px;border:1px solid var(--bd)}
+canvas{width:100%;height:auto;background:var(--bg);border-radius:12px;border:1px solid var(--bd);display:block}
 .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
 .ac{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:8px;overflow:hidden}
 .ac.open{border-color:var(--acc)}.ac.fin .ah .cnt{color:var(--acc)}
 .ac.wu{border-left:4px solid var(--org)}.ac.wu.open{border-color:var(--acc);border-left-color:var(--org)}
+.ac.st{border-left:4px solid var(--blu)}.ac.st.open{border-color:var(--acc);border-left-color:var(--blu)}
 .ah{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;background:none;border:0;border-radius:0;padding:14px;font-weight:600;font-size:15px}
 .ah small{display:block;color:var(--mut);font-weight:400;font-size:11px;margin-top:2px}
 .ah .meta{display:flex;align-items:center;gap:10px;white-space:nowrap}.cnt{color:var(--mut);font-size:13px}
@@ -59,6 +61,9 @@ canvas{width:100%;height:auto;aspect-ratio:760/240;background:var(--bg);border-r
 .gc{background:var(--bg);border:2px solid var(--bd);border-radius:10px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
 .gc img{width:100%;aspect-ratio:1;object-fit:cover;background:#262b35;display:block}
 .gc span{font-size:10px;padding:4px 5px;line-height:1.2;min-height:28px}
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.pg .card{margin:0}.pg h3{font-size:14px;margin-bottom:6px}
+.pk{display:flex;justify-content:space-between;gap:6px;font-size:12px;margin-top:8px;color:var(--mut)}.pk b{color:var(--tx);font-size:14px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .grid2 label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--mut)}
 .grid2 input{width:100%;font-size:15px;color:var(--tx)}
@@ -76,6 +81,7 @@ details summary{cursor:pointer;font-weight:600}
 <aside id="side"><div class="sh">MENU</div>
 <button id="bT" onclick="go('log')">🏋️ SÉANCES</button>
 <button id="bP" onclick="go('prog')">📈 PROGRÈS</button>
+<button id="bL" onclick="go('lib')">🖼️ BIBLIOTHÈQUE</button>
 <button id="bY" onclick="go('phys')">🧍 PHYSIQUE</button></aside>
 <main id="m"></main>
 <script>
@@ -96,7 +102,7 @@ function makeWeek(w){const d={};DAYS.forEach(x=>d[x]={name:"Repos",ex:[]});
  return d}
 let D=JSON.parse(localStorage.getItem("muscu2")||"null");
 if(!D){D={weeks:{}};for(let w=1;w<=6;w++)D.weeks[w]=makeWeek(w)}
-D.done=D.done||{};D.state=D.state||{};D.imgs=D.imgs||{};D.warm=D.warm||{};
+D.done=D.done||{};D.state=D.state||{};D.imgs=D.imgs||{};D.warm=D.warm||{};D.stretch=D.stretch||{};
 D.body=D.body||{p:{prenom:"",nom:"",age:"",taille:"",cible:""},w:{}};
 if(!D.mig_tjs){
  [1,2].forEach(w=>{const o=D.weeks[w];if(!o)return;
@@ -115,15 +121,16 @@ if(!D.weeks[W])W=wk()[0];
 if(D.done[W]){const n=wk().find(w=>!D.done[w]);if(n)W=n}
 const save=()=>{D.state={week:W,day};localStorage.setItem("muscu2",JSON.stringify(D))};
 const esc=s=>String(s).replace(/"/g,"&quot;");
+const norm=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 function prev(w,ex){for(const x of wk().filter(k=>k<w).reverse())for(const dd of DAYS)for(const e of D.weeks[x][dd].ex)
   if(e.n===ex&&e.sets.some(s=>s.kg!==""||s.reps!==""))return e;return null}
 function dayHas(w,d){return D.weeks[w][d].ex.some(e=>e.sets.some(s=>s.ok||s.reps!==""))}
 function toggleMenu(){document.getElementById('side').classList.toggle('open');document.getElementById('veil').classList.toggle('open')}
 function go(m){mode=m;toggleMenu();render()}
-function render(){save();["bT","bP","bY"].forEach(i=>document.getElementById(i).className="");
- document.getElementById({log:"bT",prog:"bP",phys:"bY"}[mode]).className="on";({log,prog,phys})[mode]()}
+function render(){save();["bT","bP","bL","bY"].forEach(i=>document.getElementById(i).className="");
+ document.getElementById({log:"bT",prog:"bP",lib:"bL",phys:"bY"}[mode]).className="on";({log,prog,lib,phys})[mode]()}
 
-/* ---------- ÉCHAUFFEMENT (méthode RAMP, change chaque semaine) ---------- */
+/* ---------- ÉCHAUFFEMENT (RAMP, change chaque semaine) ---------- */
 const CARDIO=["Rameur","Vélo","Corde à sauter","Tapis en marche rapide incliné","SkiErg ou elliptique","Rameur"];
 const UP=[
  [["Cercles de bras","10 dans chaque sens"],["Pull-aparts à l'élastique","15 reps"],["Rotations externes à l'élastique","12 par côté, coude collé"]],
@@ -139,24 +146,34 @@ const LOW=[
  [["Leg swings latéraux","10 par jambe"],["Squat au poids du corps","12 reps"],["Mobilité de cheville au mur","10 par côté"]],
  [["Cat-cow","8 reps"],["Good morning poids du corps","10 reps"],["Fentes latérales","6 par côté"]],
  [["Squat profond tenu","30 s"],["Pont fessier","12 reps"],["Marche latérale avec élastique","10 pas par côté"]]];
-function warmup(){const i=(W-1)%6,low=norm(D.weeks[W][day].name).includes("bas"),full=norm(D.weeks[W][day].name).includes("full");
- const mid=(low?LOW:UP)[i].slice();if(full&&!low)mid.push(["Squat au poids du corps","10 reps"]);
+const kind=()=>{const n=norm(D.weeks[W][day].name);return n.includes("bas")?"low":n.includes("full")?"full":"up"};
+function warmup(){const i=(W-1)%6,k=kind();
+ const mid=(k=="low"?LOW:UP)[i].slice();if(k=="full")mid.push(["Squat au poids du corps","10 reps"]);
  return [["R · Monter la température",CARDIO[i]+" · 4 à 5 min, effort modéré (60-70 %)"],...mid.map(x=>["A/M · "+x[0],x[1]]),["P · Séries de montée","2-3 séries sur ton 1er exercice : charge croissante, reps décroissantes"]]}
+/* ---------- ÉTIREMENTS (fin de séance) ---------- */
+const ST={
+ pec:["Pectoraux au mur","30 s par côté"],lat:["Dorsaux (lats)","30 s"],epa:["Épaules, bras croisé","30 s par côté"],tri:["Triceps, bras derrière la tête","30 s par côté"],
+ bic:["Biceps au mur","30 s par côté"],avb:["Avant-bras (poignets)","20 s par côté"],enf:["Position de l'enfant","40 s"],
+ qua:["Quadriceps debout","30 s par jambe"],isc:["Ischio-jambiers","30 s par jambe"],fes:["Fessiers (figure 4)","30 s par côté"],
+ hip:["Fléchisseurs de hanche","30 s par côté"],mol:["Mollets au mur","30 s par côté"],add:["Adducteurs (papillon)","30 s"]};
+const STR={up:["pec","lat","epa","tri","bic","avb","enf"],low:["qua","isc","fes","hip","mol","add","enf"],full:["pec","lat","epa","qua","isc","fes","mol","enf"]};
+const stretches=()=>STR[kind()].map(k=>ST[k]);
 const wkey=()=>W+"|"+day;
 function wchk(k,v){D.warm[wkey()]=D.warm[wkey()]||[];D.warm[wkey()][k]=v;save();render()}
+function schk(k,v){D.stretch[wkey()]=D.stretch[wkey()]||[];D.stretch[wkey()][k]=v;save();render()}
 
 /* ---------- SÉANCES ---------- */
 function tg(i){OPEN=(OPEN===i?null:i);render()}
+function checklist(cls,id,icon,title,sub,steps,ck,fn,foot){const n=steps.filter((_,k)=>ck[k]).length,op=OPEN===id;
+ return `<div class="ac ${cls} ${op?'open':''} ${n==steps.length?'fin':''}"><button class="ah" onclick="tg(${id})"><span>${icon} ${title}<small>${sub}</small></span><span class="meta"><span class="cnt">${n==steps.length?'✓ ':''}${n}/${steps.length}</span><span class="chev">▾</span></span></button>`+
+ (op?`<div class="ab">${steps.map((s,k)=>`<label class="wr ${ck[k]?'ck':''}"><input type="checkbox" ${ck[k]?'checked':''} onchange="${fn}(${k},this.checked)"><span>${s[0]}<small>${s[1]}</small></span></label>`).join("")}<p class="hint" style="margin:10px 0 0">${foot}</p></div>`:"")+`</div>`}
 function log(){
  let h=`<div class="wkbar"><select onchange="W=+this.value;OPEN=null;render()">${wk().map(w=>`<option value="${w}" ${w==W?'selected':''}>Semaine ${w}${D.done[w]?' ✓':''}</option>`).join("")}</select><button onclick="addWeek()" title="Nouvelle semaine">＋</button></div>
  <div class="scroll">${DAYS.map(d=>`<button class="${d==day?'on':''} ${dayHas(W,d)?'dot':''}" onclick="day='${d}';OPEN=null;render()">${d}</button>`).join("")}</div>`;
  const S=D.weeks[W][day];let vol=0,sets=0;S.ex.forEach(e=>e.sets.forEach(s=>{if(s.kg!==""&&s.reps!==""){vol+=s.kg*s.reps;sets++}}));
  h+=`<div class="top"><input value="${esc(S.name)}" onchange="D.weeks[W][day].name=this.value;save()" placeholder="Nom de la séance"><button class="x" onclick="clearDay()" title="Vider">🗑</button></div>
  <div class="sum"><span>Séries : <b>${sets}</b></span><span>Volume : <b>${vol}</b> kg</span></div>`;
- if(S.ex.length){const steps=warmup(),ck=D.warm[wkey()]||[],n=steps.filter((_,k)=>ck[k]).length,op=OPEN===-1;
-  h+=`<div class="ac wu ${op?'open':''} ${n==steps.length?'fin':''}"><button class="ah" onclick="tg(-1)"><span>🔥 Échauffement<small>Semaine ${W} · environ 10 min</small></span><span class="meta"><span class="cnt">${n==steps.length?'✓ ':''}${n}/${steps.length}</span><span class="chev">▾</span></span></button>`;
-  if(op)h+=`<div class="ab">${steps.map((s,k)=>`<label class="wr ${ck[k]?'ck':''}"><input type="checkbox" ${ck[k]?'checked':''} onchange="wchk(${k},this.checked)"><span>${s[0]}<small>${s[1]}</small></span></label>`).join("")}<p class="hint" style="margin:10px 0 0">Méthode RAMP : monter la température, activer/mobiliser, puis potentialiser. L'échauffement change chaque semaine.</p></div>`;
-  h+=`</div>`}
+ if(S.ex.length)h+=checklist("wu",-1,"🔥","Échauffement","Semaine "+W+" · environ 10 min",warmup(),D.warm[wkey()]||[],"wchk","Méthode RAMP : monter la température, activer/mobiliser, puis potentialiser. L'échauffement change chaque semaine.");
  S.ex.forEach((e,i)=>{const p=prev(W,e.n),filled=e.sets.filter(s=>s.reps!=="").length,all=e.sets.length&&filled==e.sets.length,op=OPEN===i;
   h+=`<div class="ac ${op?'open':''} ${all?'fin':''}"><button class="ah" onclick="tg(${i})"><span>${e.n}${e.t?`<small>Objectif : ${e.t} reps</small>`:""}</span><span class="meta"><span class="cnt">${all?'✓ ':''}${filled}/${e.sets.length}</span><span class="chev">▾</span></span></button>`;
   if(op){
@@ -166,6 +183,7 @@ function log(){
     h+=`<div class="set"><span class="lbl">${k+1}</span><input type="number" step="0.5" value="${s.kg}" placeholder="${q&&q.kg!==''?q.kg:''}" onchange="setv(${i},${k},'kg',this.value)"><input type="number" value="${s.reps}" placeholder="${q&&q.reps!==''?q.reps:''}" onchange="setv(${i},${k},'reps',this.value)"><input type="checkbox" ${s.ok?'checked':''} onchange="setv(${i},${k},'ok',this.checked)"><button class="x" onclick="delSet(${i},${k})">−</button></div>`});
    h+=`<button onclick="addSet(${i})">＋ série</button> ${p?`<span class="hint">Placeholders = semaine précédente</span>`:""}</div>`}
   h+=`</div>`});
+ if(S.ex.length)h+=checklist("st",-2,"🧘","Étirements","Fin de séance · environ 8 min",stretches(),D.stretch[wkey()]||[],"schk","Étirements doux en fin de séance : tiens chaque position sans douleur, en respirant calmement.");
  h+=`<button class="pri" onclick="addEx()">＋ Ajouter un exercice</button>
  <label class="done ${D.done[W]?'ok':''}"><input type="checkbox" ${D.done[W]?'checked':''} onchange="markDone(this.checked)"><span>Semaine ${W} terminée</span></label>`;
  document.getElementById("m").innerHTML=h}
@@ -183,17 +201,35 @@ function clearDay(){if(confirm("Vider ce jour (repos) ?")){D.weeks[W][day]={name
 function addWeek(){const n=Math.max(...wk())+1;D.weeks[n]=JSON.parse(JSON.stringify(D.weeks[n-1]));
  Object.values(D.weeks[n]).forEach(s=>s.ex.forEach(e=>e.sets.forEach(x=>{x.reps="";x.ok=false})));W=n;OPEN=null;render()}
 
-/* ---------- graphique ---------- */
-function drawLine(id,pts,zero=true){const c=document.getElementById(id);if(!c)return;const x=c.getContext("2d");x.clearRect(0,0,760,240);
- if(!pts.length){x.fillStyle="#8b919c";x.font="14px sans-serif";x.fillText("PAS ENCORE DE DONNÉES",20,30);return}
+/* ---------- graphique générique ---------- */
+function drawLine(id,pts,zero=true){const c=document.getElementById(id);if(!c)return;const x=c.getContext("2d"),w=c.width,h=c.height;x.clearRect(0,0,w,h);
+ const fs=Math.max(10,Math.round(h/19)),pl=Math.round(w*.05),pr=Math.round(w*.04),pt=Math.round(h*.12),pb=Math.round(h*.14);x.font=fs+"px sans-serif";
+ if(!pts.length){x.fillStyle="#8b919c";x.fillText("PAS ENCORE DE DONNÉES",pl,pt+fs);return}
  let lo=Math.min(...pts.map(p=>p[1])),hi=Math.max(...pts.map(p=>p[1]));
  if(zero){lo=0;hi=hi*1.15||1}else{const pad=Math.max((hi-lo)*.25,.5);lo-=pad;hi+=pad}
- const X=i=>50+(pts.length>1?i*(660/(pts.length-1)):330),Y=v=>205-(v-lo)/((hi-lo)||1)*170;
- x.strokeStyle="#2a2f3a";x.lineWidth=1;for(let k=0;k<4;k++){const y=35+k*170/3;x.beginPath();x.moveTo(40,y);x.lineTo(730,y);x.stroke()}
- x.strokeStyle="#4ade80";x.lineWidth=2.5;x.beginPath();pts.forEach((p,i)=>i?x.lineTo(X(i),Y(p[1])):x.moveTo(X(i),Y(p[1])));x.stroke();
- x.font="12px sans-serif";pts.forEach((p,i)=>{x.fillStyle="#4ade80";x.beginPath();x.arc(X(i),Y(p[1]),4,0,7);x.fill();x.fillStyle="#e8eaed";x.fillText(p[1],X(i)-10,Y(p[1])-10);x.fillStyle="#8b919c";x.fillText(p[0],X(i)-8,226)})}
+ const X=i=>pl+(pts.length>1?i*((w-pl-pr)/(pts.length-1)):(w-pl-pr)/2),Y=v=>h-pb-(v-lo)/((hi-lo)||1)*(h-pt-pb);
+ x.strokeStyle="#2a2f3a";x.lineWidth=1;for(let k=0;k<4;k++){const y=pt+k*(h-pt-pb)/3;x.beginPath();x.moveTo(pl-6,y);x.lineTo(w-pr+6,y);x.stroke()}
+ x.strokeStyle="#4ade80";x.lineWidth=Math.max(2,h/90);x.beginPath();pts.forEach((p,i)=>i?x.lineTo(X(i),Y(p[1])):x.moveTo(X(i),Y(p[1])));x.stroke();
+ pts.forEach((p,i)=>{x.fillStyle="#4ade80";x.beginPath();x.arc(X(i),Y(p[1]),Math.max(3,h/60),0,7);x.fill();x.fillStyle="#e8eaed";x.fillText(p[1],X(i)-fs*.7,Y(p[1])-fs*.7);x.fillStyle="#8b919c";x.fillText(p[0],X(i)-fs*.7,h-pb*.3)})}
 
-/* ---------- PROGRÈS ---------- */
+/* ---------- PROGRÈS : automatique, sans images ---------- */
+let PM="max";
+const PMN={max:"Charge max (kg)",vol:"Volume (kg)",rep:"Reps totales"};
+function series(name,m){const pts=[];
+ wk().forEach(w=>{let v=0,any=false;DAYS.forEach(d=>D.weeks[w][d].ex.filter(x=>x.n==name).forEach(x=>x.sets.forEach(s=>{
+  if(s.reps!==""){any=true;const kg=s.kg===""?0:s.kg;if(m=="max")v=Math.max(v,kg);else if(m=="vol")v+=kg*s.reps;else v+=s.reps}})));
+  if(any)pts.push(["S"+w,Math.round(v*10)/10])});return pts}
+function setPM(m){PM=m;prog()}
+function prog(){const s=new Set();wk().forEach(w=>DAYS.forEach(d=>D.weeks[w][d].ex.forEach(e=>s.add(e.n))));
+ const names=[...s].filter(n=>series(n,"rep").length);
+ let h=`<div class="seg">${Object.keys(PMN).map(k=>`<button class="${PM==k?'on':''}" onclick="setPM('${k}')">${PMN[k]}</button>`).join("")}</div>`;
+ if(!names.length){document.getElementById("m").innerHTML=h+'<div class="card hint">Aucune donnée pour le moment. Dès que tu notes des répétitions dans une séance, la courbe de l\'exercice apparaît ici automatiquement.</div>';return}
+ h+=`<div class="pg">${names.map((n,i)=>{const p=series(n,PM),last=p[p.length-1][1],pr=p.length>1?p[p.length-2][1]:null,rec=Math.max(...p.map(q=>q[1]));
+  return `<div class="card"><h3>${n}</h3><canvas id="pc${i}" width="480" height="210"></canvas><div class="pk"><span>Dernier<br><b>${last}</b></span><span>Record<br><b>${rec}</b></span><span>Vs préc.<br><b>${pr!=null?delta(last-pr):'–'}</b></span></div></div>`}).join("")}</div>`;
+ document.getElementById("m").innerHTML=h;
+ names.forEach((n,i)=>drawLine("pc"+i,series(n,PM),true))}
+
+/* ---------- BIBLIOTHÈQUE : images (échauffement / exercices / étirements) ---------- */
 const IMG="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
 const DBURL="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json";
 const FR={"tirage poitrine":"lat pulldown","tirage vertical":"lat pulldown","traction":"pullups","chest press":"chest press","presse a cuisses":"leg press","presse":"leg press",
@@ -201,38 +237,52 @@ const FR={"tirage poitrine":"lat pulldown","tirage vertical":"lat pulldown","tra
 "developpe incline":"incline dumbbell press","pompes":"pushups","curl incline":"incline dumbbell curl","curl halteres":"dumbbell bicep curl","curl":"barbell curl","gainage":"plank",
 "rowing poulie basse":"seated cable rows","rowing unilateral":"one-arm dumbbell row","rowing buste penche":"bent over barbell row","fente arriere":"lunge","oiseau":"reverse flyes",
 "triceps poulie":"triceps pushdown","extension triceps":"triceps pushdown","souleve de terre roumain":"romanian deadlift","squat":"barbell squat","leg curl":"lying leg curls",
-"mollets":"standing calf raises","elevations laterales":"side lateral raise","dips":"dips triceps version"};
-const norm=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+"mollets":"standing calf raises","elevations laterales":"side lateral raise","dips":"dips triceps version",
+"cercles de bras":"arm circles","pull-aparts":"band pull apart","rotations externes":"external rotation","wall slides":"wall slide","ouvertures thoraciques":"thoracic rotation",
+"tractions scapulaires":"scapular pull","cat-cow":"cat stretch","shoulder dislocates":"dislocat","pompes progressives":"pushups","cercles d'epaules":"shoulder circles",
+"rotations thoraciques":"thoracic rotation","rowing elastique":"band row","balanciers de bras":"arm swing","planche dynamique":"plank","y-t-w":"y raise",
+"fentes dynamiques":"lunge","leg swings":"leg swing","pont fessier 1 jambe":"single leg glute bridge","pont fessier":"glute bridge","squat goblet":"goblet squat",
+"rotations de hanche":"hip circle","cercles de chevilles":"ankle circles","world's greatest":"greatest stretch","fentes arriere":"lunge","squat au poids du corps":"bodyweight squat",
+"mobilite de cheville":"ankle","good morning":"good morning","fentes laterales":"side lunge","squat profond":"squat","marche laterale":"lateral band walk",
+"rameur":"rowing stationary","velo":"bicycling stationary","corde a sauter":"rope jumping","tapis":"treadmill","skierg":"elliptical",
+"pectoraux au mur":"chest stretch","dorsaux":"lat stretch","epaules, bras croise":"shoulder stretch","triceps, bras derriere":"triceps stretch","biceps au mur":"biceps stretch",
+"avant-bras":"forearm stretch","position de l'enfant":"child pose","quadriceps debout":"quad stretch","ischio-jambiers":"hamstring stretch","fessiers (figure":"glute stretch",
+"flechisseurs de hanche":"hip flexor","mollets au mur":"calf stretch","adducteurs":"groin stretch"};
 let DB=null;
 async function loadDB(){if(DB)return DB;const r=await fetch(DBURL);DB=await r.json();return DB}
-function search(q,n=8){const t=norm(q).split(/[^a-z0-9]+/).filter(Boolean);if(!t.length)return[];
- return DB.map(e=>{const nm=norm(e.name),c=t.filter(w=>nm.includes(w)).length;return{e,c,l:nm.length+(e.category=="strength"?0:30)}})
+function search(q,n=8,pref="strength"){const t=norm(q).split(/[^a-z0-9]+/).filter(Boolean);if(!t.length)return[];
+ return DB.map(e=>{const nm=norm(e.name),c=t.filter(w=>nm.includes(w)).length;
+  const pen=pref=="any"?0:(pref=="stretching"?(e.category=="stretching"?0:30):(e.category=="strength"?0:30));return{e,c,l:nm.length+pen}})
   .filter(x=>x.c>0).sort((a,b)=>b.c-a.c||a.l-b.l).slice(0,n).map(x=>x.e)}
-function guess(name){const k=norm(name);let q=null;
+function guess(name,pref){const k=norm(name);let q=null;
  for(const f of Object.keys(FR).sort((a,b)=>b.length-a.length)){if(k.includes(f)){q=FR[f];break}}
- const r=search(q||name,1);return r[0]?r[0].id:null}
-let EXS=[],SEL=null;
-function prog(){const s=new Set();wk().forEach(w=>DAYS.forEach(d=>D.weeks[w][d].ex.forEach(e=>s.add(e.n))));EXS=[...s];
- if(!EXS.includes(SEL))SEL=EXS[0]||null;
- document.getElementById("m").innerHTML=`<div class="wkbar"><select id="exsel" onchange="SEL=this.value;openEx()">${EXS.map(n=>`<option ${n==SEL?'selected':''}>${n}</option>`).join("")}</select></div>
- <div class="card"><div id="sel"></div><div class="bar"><select id="pm" onchange="draw()"><option value="max">Charge max</option><option value="vol">Volume</option><option value="rep">Reps totales</option></select></div><canvas id="cv" width="760" height="240"></canvas><div id="pr" class="hint" style="margin-top:8px"></div></div>`;
- openEx();resolveAll()}
-function openEx(){showSel();draw()}
-function showSel(){const el=document.getElementById("sel");if(!el||!SEL)return;const id=D.imgs[SEL];
- el.innerHTML=(id?`<div class="big"><img alt="" src="${IMG}${id}/0.jpg"><img alt="" src="${IMG}${id}/1.jpg"></div>`:`<div class="hint">Recherche de l'image…</div>`)+
- `<div class="bar"><button onclick="changeImg()">🔍 Changer l'image</button></div><div id="res"></div>`}
-async function resolveAll(){try{for(const n of EXS){if(D.imgs[n])continue;await loadDB();const id=guess(n);
-  if(id){D.imgs[n]=id;save();if(n==SEL)showSel()}}}
- catch(e){const el=document.getElementById("sel");if(el&&!D.imgs[SEL])el.innerHTML='<div class="hint">Images indisponibles (connexion requise)</div>'}}
-async function changeImg(){const q=prompt("Mot-clé en anglais (ex : lat pulldown, bench press, plank)");if(!q)return;
+ const r=search(q||name,1,pref);return r[0]?r[0].id:null}
+function libData(){
+ const warm=new Map();CARDIO.forEach(c=>warm.set(c,"4 à 5 min"));[...UP,...LOW].forEach(r=>r.forEach(([n,d])=>warm.set(n,d)));
+ const ex=new Map();Object.values(TPL).forEach(f=>f().ex.forEach(e=>ex.set(e.n,e.t?e.t+" reps":"")));
+ wk().forEach(w=>DAYS.forEach(d=>D.weeks[w][d].ex.forEach(e=>{if(!ex.has(e.n))ex.set(e.n,e.t?e.t+" reps":"")})));
+ const st=new Map();Object.values(ST).forEach(([n,d])=>st.set(n,d));
+ return {warm:[...warm],ex:[...ex],str:[...st]}}
+let LT="warm",LOPEN=null,LRUN=0;
+const LPREF={warm:"any",ex:"strength",str:"stretching"};
+const LNAME={warm:"🔥 Échauffement",ex:"🏋️ Exercices",str:"🧘 Étirements"};
+function lib(){const L=libData(),list=L[LT];
+ let h=`<div class="seg">${Object.keys(LNAME).map(k=>`<button class="${LT==k?'on':''}" onclick="LT='${k}';LOPEN=null;lib()">${LNAME[k]}</button>`).join("")}</div>`;
+ h+=list.map(([n,d],i)=>{const op=LOPEN===n;
+  return `<div class="ac ${op?'open':''}"><button class="ah" data-n="${esc(n)}" onclick="libTg(this.dataset.n)"><span>${n}${d?`<small>${d}</small>`:""}</span><span class="meta"><span class="chev">▾</span></span></button>${op?`<div class="ab"><div id="lsel"></div><div class="bar"><button onclick="libChange()">🔍 Changer l'image</button></div><div id="res"></div></div>`:""}</div>`}).join("");
+ h+=`<p class="hint">Images : free-exercise-db (domaine public). Si une image ne correspond pas, utilise « Changer l'image ».</p>`;
+ document.getElementById("m").innerHTML=h;if(LOPEN)libShow();libResolve(list)}
+function libTg(n){LOPEN=(LOPEN===n?null:n);lib()}
+function libShow(){const el=document.getElementById("lsel");if(!el||!LOPEN)return;const id=D.imgs[LOPEN];
+ el.innerHTML=id?`<div class="big"><img alt="" src="${IMG}${id}/0.jpg"><img alt="" src="${IMG}${id}/1.jpg"></div>`:`<div class="hint">Recherche de l'image…</div>`}
+async function libResolve(list){const run=++LRUN;
+ try{for(const [n] of list){if(run!=LRUN)return;if(D.imgs[n])continue;await loadDB();const id=guess(n,LPREF[LT]);
+  if(id){D.imgs[n]=id;save();if(n===LOPEN)libShow()}}}
+ catch(e){const el=document.getElementById("lsel");if(el&&!D.imgs[LOPEN])el.innerHTML='<div class="hint">Images indisponibles (connexion requise)</div>'}}
+async function libChange(){const q=prompt("Mot-clé en anglais (ex : lat pulldown, hamstring stretch, arm circles)");if(!q)return;
  try{await loadDB()}catch{alert("Connexion requise");return}
- const r=search(q,12);document.getElementById("res").innerHTML=r.length?r.map(e=>`<div class="gc" data-id="${esc(e.id)}" onclick="pick(this.dataset.id)"><img loading="lazy" alt="" src="${IMG}${esc(e.id)}/0.jpg"><span>${e.name}</span></div>`).join(""):'<div class="hint">Aucun résultat</div>'}
-function pick(id){D.imgs[SEL]=id;save();showSel()}
-function draw(){const e=SEL,pmEl=document.getElementById("pm");if(!e||!pmEl)return;const m=pmEl.value,pts=[];
- wk().forEach(w=>{let v=0,any=false;DAYS.forEach(d=>D.weeks[w][d].ex.filter(x=>x.n==e).forEach(x=>x.sets.forEach(s=>{
-  if(s.reps!==""){any=true;const kg=s.kg===""?0:s.kg;if(m=="max")v=Math.max(v,kg);else if(m=="vol")v+=kg*s.reps;else v+=s.reps}})));if(any)pts.push(["S"+w,v])});
- drawLine("cv",pts,true);
- document.getElementById("pr").textContent=pts.length?"Meilleur : "+Math.max(...pts.map(p=>p[1])):""}
+ const r=search(q,12,"any");document.getElementById("res").innerHTML=r.length?r.map(e=>`<div class="gc" data-id="${esc(e.id)}" onclick="libPick(this.dataset.id)"><img loading="lazy" alt="" src="${IMG}${esc(e.id)}/0.jpg"><span>${e.name}</span></div>`).join(""):'<div class="hint">Aucun résultat</div>'}
+function libPick(id){D.imgs[LOPEN]=id;save();libShow();document.getElementById("res").innerHTML=""}
 
 /* ---------- PHYSIQUE ---------- */
 const P=()=>D.body.p, BW=()=>D.body.w;
@@ -271,14 +321,13 @@ function phys(){const p=P(),T=+p.taille||0,ws=wk(),have=ws.filter(w=>BW()[w]!=nu
  <div class="card"><h3>Évolution</h3><div class="bar"><select id="bm" onchange="drawBody()"><option value="w">Poids (kg)</option><option value="i">IMC</option></select></div><canvas id="bc" width="760" height="240"></canvas></div>
  <div class="card"><details><summary>💾 Sauvegarde des données</summary><p class="hint">Les données restent dans ce navigateur. Exporte-les régulièrement.</p>
   <button class="pri" onclick="exp()">Exporter JSON</button> <input type="file" accept=".json" onchange="imp(this)">
-  <p><button class="x" onclick="if(confirm('Tout réinitialiser ?')){localStorage.removeItem('muscu2');location.reload()}">Réinitialiser</button></p>
-  <p class="hint">Images : free-exercise-db (domaine public)</p></details></div>`;
+  <p><button class="x" onclick="if(confirm('Tout réinitialiser ?')){localStorage.removeItem('muscu2');location.reload()}">Réinitialiser</button></p></details></div>`;
  drawBody()}
 function drawBody(){const T=+P().taille||0,m=document.getElementById("bm").value;
  const pts=wk().filter(w=>BW()[w]!=null).map(w=>["S"+w,m=="w"?BW()[w]:(T?Math.round(bmi(BW()[w],T)*10)/10:null)]).filter(p=>p[1]!=null);
  drawLine("bc",pts,false)}
 function exp(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(D)],{type:"application/json"}));a.download="diary-muscu-"+new Date().toISOString().slice(0,10)+".json";a.click()}
-function imp(i){const r=new FileReader();r.onload=()=>{try{D=JSON.parse(r.result);D.done=D.done||{};D.state=D.state||{};D.imgs=D.imgs||{};D.warm=D.warm||{};D.body=D.body||{p:{prenom:"",nom:"",age:"",taille:"",cible:""},w:{}};W=wk()[0];save();alert("Importé ✅");render()}catch{alert("Fichier invalide")}};r.readAsText(i.files[0])}
+function imp(i){const r=new FileReader();r.onload=()=>{try{D=JSON.parse(r.result);D.done=D.done||{};D.state=D.state||{};D.imgs=D.imgs||{};D.warm=D.warm||{};D.stretch=D.stretch||{};D.body=D.body||{p:{prenom:"",nom:"",age:"",taille:"",cible:""},w:{}};W=wk()[0];save();alert("Importé ✅");render()}catch{alert("Fichier invalide")}};r.readAsText(i.files[0])}
 render();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script></body></html>
