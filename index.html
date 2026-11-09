@@ -60,11 +60,14 @@ canvas{width:100%;height:auto;background:var(--bg);border-radius:12px;border:1px
 .wr input{width:24px;height:24px;accent-color:var(--acc);flex:none}
 .wr span{font-size:14px;font-weight:600}.wr small{display:block;color:var(--mut);font-weight:400;font-size:11px;margin-top:2px}
 .wr.ck span{color:var(--mut);text-decoration:line-through}
-.big{display:grid;grid-template-columns:1fr 1fr;gap:8px}.big img{width:100%;border-radius:10px;background:#262b35;aspect-ratio:4/3;object-fit:cover}
-#res{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:8px}
-.gc{background:var(--bg);border:2px solid var(--bd);border-radius:10px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
-.gc img{width:100%;aspect-ratio:1;object-fit:cover;background:#262b35;display:block}
-.gc span{font-size:10px;padding:4px 5px;line-height:1.2;min-height:28px}
+.big{display:grid;grid-template-columns:1fr 1fr;gap:8px}.big img{width:100%;border-radius:10px;background:#262b35;aspect-ratio:4/3;object-fit:cover;cursor:zoom-in}
+.zh{color:var(--mut);font-size:11px;margin-top:6px;text-align:center}
+#lb{display:none;position:fixed;inset:0;background:#000e;z-index:50;flex-direction:column;align-items:center;justify-content:center;padding:12px;gap:10px}
+#lb.open{display:flex}
+#lb img{max-width:100%;max-height:calc(100vh - 130px);object-fit:contain;border-radius:8px;background:#262b35;touch-action:pinch-zoom}
+#lb .lt{display:flex;gap:8px;align-items:center;width:100%;max-width:700px;justify-content:space-between}
+#lb .lt button{padding:10px 16px;font-size:15px}
+#lb .cap{font-size:13px;color:var(--mut);text-align:center}
 .pk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .pk div{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px;text-align:center;font-size:11px;color:var(--mut)}
 .pk b{display:block;color:var(--tx);font-size:20px;margin-top:4px}
@@ -83,6 +86,7 @@ details summary{cursor:pointer;font-weight:600}
 <header><button id="burger" onclick="toggleMenu()" aria-label="Menu">☰</button><h1>DIARY MUSCU</h1><span></span></header>
 <div id="veil" onclick="toggleMenu()"></div>
 <aside id="side"></aside>
+<div id="lb" onclick="lbClose()"><div class="lt" onclick="event.stopPropagation()"><button onclick="lbNext(-1)">◀</button><button class="x" onclick="lbClose()">✕ Fermer</button><button onclick="lbNext(1)">▶</button></div><img id="lbi" alt="" onclick="event.stopPropagation();lbNext(1)"><div class="cap" id="lbc"></div></div>
 <main id="m"></main>
 <script>
 const DAYS=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
@@ -206,7 +210,7 @@ function markDone(v){D.done[W]=v;if(!v)delete D.done[W];
 const cd=()=>D.weeks[W][day];
 function setv(i,k,f,v){cd().ex[i].sets[k][f]=(f=="ok")?v:(v===""?"":+v);save();render()}
 function addWeek(){const n=Math.max(...wk())+1;D.weeks[n]=JSON.parse(JSON.stringify(D.weeks[n-1]));
- Object.values(D.weeks[n]).forEach(s=>s.ex.forEach(e=>e.sets.forEach(x=>{x.kg=x.kg;x.reps="";x.ok=false})));W=n;OPEN=null;render()}
+ Object.values(D.weeks[n]).forEach(s=>s.ex.forEach(e=>e.sets.forEach(x=>{x.reps="";x.ok=false})));W=n;OPEN=null;render()}
 
 /* ---------- graphique générique ---------- */
 function drawLine(id,pts,zero=true){const c=document.getElementById(id);if(!c)return;const x=c.getContext("2d"),w=c.width,h=c.height;x.clearRect(0,0,w,h);
@@ -275,20 +279,24 @@ const LPREF={warm:"any",ex:"strength",str:"stretching"};
 function lib(){const L=libData(),list=L[LT];
  let h=`<div class="pt">ExoPics · <span>${LNAME[LT]}</span></div>`;
  h+=list.map(([n,d])=>{const op=LOPEN===n;
-  return `<div class="ac ${op?'open':''}"><button class="ah" data-n="${esc(n)}" onclick="libTg(this.dataset.n)"><span>${n}${d?`<small>${d}</small>`:""}</span><span class="meta"><span class="chev">▾</span></span></button>${op?`<div class="ab"><div id="lsel"></div><div class="bar"><button onclick="libChange()">🔍 Changer l'image</button></div><div id="res"></div></div>`:""}</div>`}).join("");
- h+=`<p class="hint">Images : free-exercise-db (domaine public). Si une image ne correspond pas, utilise « Changer l'image ».</p>`;
+  return `<div class="ac ${op?'open':''}"><button class="ah" data-n="${esc(n)}" onclick="libTg(this.dataset.n)"><span>${n}${d?`<small>${d}</small>`:""}</span><span class="meta"><span class="chev">▾</span></span></button>${op?`<div class="ab"><div id="lsel"></div></div>`:""}</div>`}).join("");
+ h+=`<p class="hint">Images : free-exercise-db (domaine public).</p>`;
  document.getElementById("m").innerHTML=h;if(LOPEN)libShow();libResolve(list)}
 function libTg(n){LOPEN=(LOPEN===n?null:n);lib()}
 function libShow(){const el=document.getElementById("lsel");if(!el||!LOPEN)return;const id=D.imgs[LOPEN];
- el.innerHTML=id?`<div class="big"><img alt="" src="${IMG}${id}/0.jpg"><img alt="" src="${IMG}${id}/1.jpg"></div>`:`<div class="hint">Recherche de l'image…</div>`}
+ el.innerHTML=id?`<div class="big"><img alt="" src="${IMG}${id}/0.jpg" onclick="zoom(0)"><img alt="" src="${IMG}${id}/1.jpg" onclick="zoom(1)"></div><div class="zh">Touche une image pour l'agrandir</div>`:`<div class="hint">Recherche de l'image…</div>`}
 async function libResolve(list){const run=++LRUN;
  try{for(const [n] of list){if(run!=LRUN)return;if(D.imgs[n])continue;await loadDB();const id=guess(n,LPREF[LT]);
   if(id){D.imgs[n]=id;save();if(n===LOPEN)libShow()}}}
  catch(e){const el=document.getElementById("lsel");if(el&&!D.imgs[LOPEN])el.innerHTML='<div class="hint">Images indisponibles (connexion requise)</div>'}}
-async function libChange(){const q=prompt("Mot-clé en anglais (ex : lat pulldown, hamstring stretch, arm circles)");if(!q)return;
- try{await loadDB()}catch{alert("Connexion requise");return}
- const r=search(q,12,"any");document.getElementById("res").innerHTML=r.length?r.map(e=>`<div class="gc" data-id="${esc(e.id)}" onclick="libPick(this.dataset.id)"><img loading="lazy" alt="" src="${IMG}${esc(e.id)}/0.jpg"><span>${e.name}</span></div>`).join(""):'<div class="hint">Aucun résultat</div>'}
-function libPick(id){D.imgs[LOPEN]=id;save();libShow();document.getElementById("res").innerHTML=""}
+/* ---------- zoom plein écran ---------- */
+let LBK=0;
+function lbSet(){const id=D.imgs[LOPEN];if(!id)return;document.getElementById("lbi").src=IMG+id+"/"+LBK+".jpg";
+ document.getElementById("lbc").textContent=LOPEN+" · "+(LBK==0?"position de départ":"position d'arrivée")+" · touche l'image pour passer à l'autre"}
+function zoom(k){if(!D.imgs[LOPEN])return;LBK=k;lbSet();document.getElementById("lb").classList.add("open")}
+function lbNext(){LBK=LBK?0:1;lbSet()}
+function lbClose(){document.getElementById("lb").classList.remove("open")}
+document.addEventListener("keydown",e=>{if(e.key=="Escape")lbClose();if(e.key=="ArrowRight"||e.key=="ArrowLeft")lbNext()});
 
 /* ---------- PHYSIQUE ---------- */
 const P=()=>D.body.p, BW=()=>D.body.w;
