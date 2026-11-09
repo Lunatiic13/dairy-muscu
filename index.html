@@ -38,16 +38,18 @@ button.x{color:var(--red);padding:4px 8px}button.pri{background:var(--acc);color
 .set input{width:100%;text-align:center}.set input[type=checkbox]{width:22px;height:22px;accent-color:var(--acc)}
 .lbl{color:var(--mut);font-size:12px;text-align:center}.hint{color:var(--mut);font-size:13px}
 .sum{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 12px;font-size:14px}.sum b{color:var(--acc)}
-canvas{width:100%;height:240px;background:var(--card);border-radius:12px;border:1px solid var(--bd)}
+canvas{width:100%;height:240px;background:var(--bg);border-radius:12px;border:1px solid var(--bd)}
 .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
-.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-bottom:12px}
-.gc{background:var(--card);border:2px solid var(--bd);border-radius:10px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
-.gc.on{border-color:var(--acc)}
-.gc img,.ph{width:100%;aspect-ratio:1;object-fit:cover;background:#262b35;display:block}
-.gc span{font-size:10px;padding:4px 5px;line-height:1.2;color:var(--tx);min-height:28px}
-#sel{margin-bottom:10px}#sel h3{margin:0 0 8px;font-size:16px}
+.ac{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:8px;overflow:hidden}
+.ac.open{border-color:var(--acc)}
+.ah{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;background:none;border:0;border-radius:0;padding:14px;font-weight:600;font-size:15px}
+.chev{transition:transform .2s;color:var(--mut)}.ac.open .chev{transform:rotate(180deg);color:var(--acc)}
+.ab{display:none;padding:0 14px 14px}.ac.open .ab{display:block}
 .big{display:grid;grid-template-columns:1fr 1fr;gap:8px}.big img{width:100%;border-radius:10px;background:#262b35;aspect-ratio:4/3;object-fit:cover}
 #res{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:8px}
+.gc{background:var(--bg);border:2px solid var(--bd);border-radius:10px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
+.gc img{width:100%;aspect-ratio:1;object-fit:cover;background:#262b35;display:block}
+.gc span{font-size:10px;padding:4px 5px;line-height:1.2;min-height:28px}
 </style></head><body>
 <header><button id="burger" onclick="toggleMenu()" aria-label="Menu">☰</button><h1>DIARY MUSCU</h1><span></span></header>
 <div id="veil" onclick="toggleMenu()"></div>
@@ -117,7 +119,7 @@ function clearDay(){if(confirm("Vider ce jour (repos) ?")){D.weeks[W][day]={name
 function addWeek(){const n=Math.max(...wk())+1;D.weeks[n]=JSON.parse(JSON.stringify(D.weeks[n-1]));
  Object.values(D.weeks[n]).forEach(s=>s.ex.forEach(e=>e.sets.forEach(x=>{x.reps="";x.ok=false})));W=n;render()}
 
-/* ---------- IMAGES D'EXERCICES (base libre free-exercise-db) ---------- */
+/* ---------- PROGRÈS : menu déroulant d'exercices + images ---------- */
 const IMG="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
 const DBURL="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json";
 const FR={"tirage poitrine":"lat pulldown","tirage vertical":"lat pulldown","traction":"pullups","chest press":"chest press","presse a cuisses":"leg press","presse":"leg press",
@@ -137,26 +139,26 @@ function guess(name){const k=norm(name);let q=null;
  const r=search(q||name,1);return r[0]?r[0].id:null}
 let EXS=[],SEL=null;
 function prog(){const s=new Set();wk().forEach(w=>DAYS.forEach(d=>D.weeks[w][d].ex.forEach(e=>s.add(e.n))));EXS=[...s];
- if(!EXS.includes(SEL))SEL=EXS[0];
- document.getElementById("m").innerHTML=`<div class="gal">${EXS.map((n,i)=>`<div class="gc ${n==SEL?'on':''}" id="gc${i}" onclick="selEx(${i})"><div class="ph" id="gi${i}"></div><span>${n}</span></div>`).join("")}</div>
- <div id="sel"></div>
- <div class="bar"><select id="pm" onchange="draw()"><option value="max">Charge max</option><option value="vol">Volume</option><option value="rep">Reps totales</option></select></div>
- <canvas id="cv" width="760" height="240"></canvas><div id="pr" class="hint" style="margin-top:8px"></div>`;
- EXS.forEach((n,i)=>fillThumb(i));showSel();draw();resolveAll()}
-function fillThumb(i){const id=D.imgs[EXS[i]],el=document.getElementById("gi"+i);if(!el||!id)return;
- el.outerHTML=`<img id="gi${i}" loading="lazy" alt="" src="${IMG}${id}/0.jpg">`}
-function selEx(i){SEL=EXS[i];EXS.forEach((n,k)=>document.getElementById("gc"+k).classList.toggle("on",k==i));showSel();draw()}
+ if(!EXS.includes(SEL))SEL=null;
+ document.getElementById("m").innerHTML=EXS.map((n,i)=>`<div class="ac" id="ac${i}"><button class="ah" onclick="toggleEx(${i})"><span>${n}</span><span class="chev">▾</span></button><div class="ab" id="ab${i}"></div></div>`).join("")||'<div class="hint">Aucun exercice</div>';
+ if(SEL)openEx(EXS.indexOf(SEL));resolveAll()}
+function toggleEx(i){if(SEL===EXS[i]){SEL=null;document.getElementById("ac"+i).classList.remove("open");document.getElementById("ab"+i).innerHTML="";return}
+ EXS.forEach((n,k)=>{document.getElementById("ac"+k).classList.remove("open");document.getElementById("ab"+k).innerHTML=""});
+ SEL=EXS[i];openEx(i);document.getElementById("ac"+i).scrollIntoView({behavior:"smooth",block:"start"})}
+function openEx(i){document.getElementById("ac"+i).classList.add("open");
+ document.getElementById("ab"+i).innerHTML=`<div id="sel"></div><div class="bar"><select id="pm" onchange="draw()"><option value="max">Charge max</option><option value="vol">Volume</option><option value="rep">Reps totales</option></select></div><canvas id="cv" width="760" height="240"></canvas><div id="pr" class="hint" style="margin-top:8px"></div>`;
+ showSel();draw()}
 function showSel(){const el=document.getElementById("sel");if(!el||!SEL)return;const id=D.imgs[SEL];
- el.innerHTML=`<h3>${SEL}</h3>`+(id?`<div class="big"><img alt="" src="${IMG}${id}/0.jpg"><img alt="" src="${IMG}${id}/1.jpg"></div>`:`<div class="hint">Recherche de l'image…</div>`)+
+ el.innerHTML=(id?`<div class="big"><img alt="" src="${IMG}${id}/0.jpg"><img alt="" src="${IMG}${id}/1.jpg"></div>`:`<div class="hint">Recherche de l'image…</div>`)+
  `<div class="bar"><button onclick="changeImg()">🔍 Changer l'image</button></div><div id="res"></div>`}
-async function resolveAll(){try{for(let i=0;i<EXS.length;i++){const n=EXS[i];if(D.imgs[n])continue;await loadDB();const id=guess(n);
-  if(id){D.imgs[n]=id;save();fillThumb(i);if(n==SEL)showSel()}}}
- catch(e){const el=document.getElementById("sel");if(el&&!D.imgs[SEL])el.innerHTML=`<h3>${SEL}</h3><div class="hint">Images indisponibles (connexion requise)</div>`}}
+async function resolveAll(){try{for(const n of EXS){if(D.imgs[n])continue;await loadDB();const id=guess(n);
+  if(id){D.imgs[n]=id;save();if(n==SEL)showSel()}}}
+ catch(e){const el=document.getElementById("sel");if(el&&!D.imgs[SEL])el.innerHTML='<div class="hint">Images indisponibles (connexion requise)</div>'}}
 async function changeImg(){const q=prompt("Mot-clé en anglais (ex : lat pulldown, bench press, plank)");if(!q)return;
  try{await loadDB()}catch{alert("Connexion requise");return}
  const r=search(q,12);document.getElementById("res").innerHTML=r.length?r.map(e=>`<div class="gc" data-id="${esc(e.id)}" onclick="pick(this.dataset.id)"><img loading="lazy" alt="" src="${IMG}${esc(e.id)}/0.jpg"><span>${e.name}</span></div>`).join(""):'<div class="hint">Aucun résultat</div>'}
-function pick(id){D.imgs[SEL]=id;save();fillThumb(EXS.indexOf(SEL));showSel()}
-function draw(){const e=SEL,m=document.getElementById("pm").value,pts=[];
+function pick(id){D.imgs[SEL]=id;save();showSel()}
+function draw(){const e=SEL,pmEl=document.getElementById("pm");if(!e||!pmEl)return;const m=pmEl.value,pts=[];
  wk().forEach(w=>{let v=0,any=false;DAYS.forEach(d=>D.weeks[w][d].ex.filter(x=>x.n==e).forEach(x=>x.sets.forEach(s=>{
   if(s.reps!==""){any=true;const kg=s.kg===""?0:s.kg;if(m=="max")v=Math.max(v,kg);else if(m=="vol")v+=kg*s.reps;else v+=s.reps}})));if(any)pts.push(["S"+w,v])});
  const x=document.getElementById("cv").getContext("2d");x.clearRect(0,0,760,240);
