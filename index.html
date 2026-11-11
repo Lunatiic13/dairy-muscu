@@ -159,6 +159,22 @@ body.resting main{padding-bottom:calc(210px + env(safe-area-inset-bottom))}
 .xr{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--bd);background:var(--bg);color:var(--r);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
 .fl{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--mut)}
 .lact{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}.lact .rg{margin-left:auto}
+.topg{display:grid;grid-template-columns:minmax(0,1fr);column-gap:10px;margin-bottom:12px}
+.topg .bubble{margin-bottom:12px}.topg .wkbar{margin-bottom:0;min-width:0}
+.topg.withc{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+.topg.withc .bubble{gap:8px}.topg.withc .say{font-size:13px;padding:8px 10px;line-height:1.25}
+.topg.withc .wkbar select{font-size:14px;min-width:0;padding-left:10px;padding-right:6px}
+.chr{grid-column:2;grid-row:1/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px;background:var(--card);border:2px solid var(--bd);border-radius:18px;text-align:center}
+.chr.run{border-color:var(--g)}.chr small{color:var(--mut);font-weight:800;font-size:12px}
+.chr b{font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+.pnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.pnav h3{margin:0;text-align:center;flex:1}
+.pwd,.pcal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.pwd{margin-bottom:4px;text-align:center;color:var(--mut);font-size:11px;font-weight:800}
+.pcd{aspect-ratio:1;border-radius:12px;border:2px solid var(--bd);background:var(--bg);color:var(--mut);font:inherit;font-weight:800;font-size:14px;position:relative;cursor:pointer;padding:0}
+.pcd.e{border:0;background:none;cursor:default}.pcd.has{background:var(--g);color:#fff;border-color:var(--g)}
+.pcd.td{border-color:var(--v2)}.pcd.sel{outline:3px solid var(--v2)}.pcd.cmp{outline:3px solid var(--o)}
+.pcd i{position:absolute;right:4px;bottom:1px;font-size:9px;font-style:normal}
+.cmpc img{width:100%;border-radius:14px;aspect-ratio:3/4;object-fit:cover;margin-bottom:8px;cursor:zoom-in}.cmpc h4{margin:0 0 8px;text-align:center}
+.lockd{opacity:.92}
 </style></head><body>
 <header><span></span><div class="brand" id="brand"></div><div class="chips" id="chips"></div></header>
 <main id="m"></main>
@@ -208,7 +224,7 @@ const IC={
  bulb:'<path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.5 10.8c.6.5 1 1.2 1 2.2h5c0-1 .4-1.7 1-2.2A6 6 0 0 0 12 3z"/>',
  warn:'<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17.2v.3"/>',
  chevR:'<path d="M9 5l7 7-7 7"/>',chevL:'<path d="M15 5l-7 7 7 7"/>',chevD:'<path d="M5 9l7 7 7-7"/>',chevU:'<path d="M5 15l7-7 7 7"/>',
- trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',plus:'<path d="M12 5v14M5 12h14"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>'
+ trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',play:'<path d="M7 5l12 7-12 7z"/>',pause:'<path d="M8 5v14M16 5v14"/>',plus:'<path d="M12 5v14M5 12h14"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>'
 };
 const ic=(n,s=22,x="")=>`<svg class="ic ${x}" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||""}</svg>`;
 
@@ -230,15 +246,16 @@ let D=null;
 try{D=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!D){try{const o=JSON.parse(localStorage.getItem(OLD));if(o&&o.weeks)D=o}catch(e){}}
 if(!D){D={weeks:{}};for(let w=1;w<=6;w++)D.weeks[w]=makeWeek(w)}
-D.done=D.done||{};D.state=D.state||{};D.imgs=D.imgs||{};D.warm=D.warm||{};D.stretch=D.stretch||{};D.wlist=D.wlist||{};D.slist=D.slist||{};
+D.done=D.done||{};D.state=D.state||{};D.imgs=D.imgs||{};D.warm=D.warm||{};D.stretch=D.stretch||{};D.wlist=D.wlist||{};D.slist=D.slist||{};D.chr=D.chr||{};D.sxp=D.sxp||{};
 if(D.imgv!==IMGV){D.imgs={};D.imgv=IMGV}
 D.body=D.body||{p:{prenom:"",nom:"",age:"",taille:"",cible:""},w:{}};
 D.sessions=D.sessions||{};D.badges=D.badges||{};D.best=D.best||0;D.recs=D.recs||0;
-D.settings=Object.assign({goal:3,wake:false,dark:false,rest:90,snd:true},D.settings||{});
-D.settings.rest=Math.min(360,Math.max(90,+D.settings.rest||90));
+D.settings=Object.assign({goal:3,wake:false,dark:false,rest:90,restEx:120,snd:true},D.settings||{});
+D.settings.rest=Math.min(360,Math.max(90,+D.settings.rest||90));D.settings.restEx=Math.min(360,Math.max(120,+D.settings.restEx||120));
 D.settings.rem=Object.assign({on:false,days:[2,4,6],time:"18:00",last:""},D.settings.rem||{});
 const wk=()=>Object.keys(D.weeks).map(Number).sort((a,b)=>a-b);
-let mode="log",W=+D.state.week||wk()[0],day=D.state.day||"Mar",OPEN=null;
+const todayDay=()=>DAYS[(new Date().getDay()+6)%7];
+let mode="log",W=+D.state.week||wk()[0],day=todayDay(),OPEN=null;
 if(!D.weeks[W])W=wk()[0];
 if(!D.weeks[W][day])day="Mar";
 const cd=()=>D.weeks[W][day];
@@ -256,8 +273,9 @@ function streak(){const cnt={};Object.values(D.sessions).forEach(ds=>{const w=ws
  const goal=D.settings.goal,cur=wstart(today());let n=(cnt[cur]||0)>=goal?1:0;const dd=new Date(cur+"T12:00:00");
  for(let i=0;i<520;i++){dd.setDate(dd.getDate()-7);if((cnt[iso(dd)]||0)>=goal)n++;else break}
  return{n,cnt,goal,thisWeek:cnt[cur]||0}}
+function xpOf(k){if(D.sxp&&D.sxp[k]!=null)return D.sxp[k];const a=k.split("|"),x=D.weeks[a[0]]&&D.weeks[a[0]][a[1]];if(!x)return 50;let n=0;x.ex.forEach(e=>e.sets.forEach(s=>{if(done(s))n++}));return n*10+50}
 function stats(){let sets=0;wk().forEach(w=>DAYS.forEach(d=>D.weeks[w][d].ex.forEach(e=>e.sets.forEach(s=>{if(done(s))sets++}))));
- const sessions=Object.keys(D.sessions).length,xp=sets*10+sessions*50,st=streak();
+ const sessions=Object.keys(D.sessions).length,xp=Object.keys(D.sessions).reduce((a,k)=>a+xpOf(k),0),st=streak();
  return{sets,sessions,xp,level:Math.floor(xp/300)+1,into:xp%300,streak:st.n,week:st.thisWeek,goal:st.goal,cnt:st.cnt}}
 const BADGES=[
  ["first","target","Premier pas","1re séance terminée",c=>c.sessions>=1],["s5","dumbbell","Habitué","5 séances",c=>c.sessions>=5],
@@ -353,8 +371,8 @@ const ST={pec:["Pectoraux au mur","30 s par côté"],lat:["Dorsaux (lats)","30 s
 const STR={up:["pec","lat","epa","tri","bic","avb","enf"],low:["qua","isc","fes","hip","mol","add","enf"],full:["pec","lat","epa","qua","isc","fes","mol","enf"]};
 const stretches=()=>STR[kind()].map(k=>ST[k]);
 const wkey=()=>W+"|"+day;
-function wchk(k,v){D.warm[wkey()]=D.warm[wkey()]||[];D.warm[wkey()][k]=v;keep()}
-function schk(k,v){D.stretch[wkey()]=D.stretch[wkey()]||[];D.stretch[wkey()][k]=v;keep()}
+function wchk(k,v){if(isLocked()){keep();return}D.warm[wkey()]=D.warm[wkey()]||[];D.warm[wkey()][k]=v;keep()}
+function schk(k,v){if(isLocked()){keep();return}D.stretch[wkey()]=D.stretch[wkey()]||[];D.stretch[wkey()][k]=v;keep()}
 
 /* ---------- fiches d'exercices ---------- */
 const INFO=[
@@ -381,7 +399,7 @@ function tg(i){OPEN=(OPEN===i?null:i);keep()}
 function checklist(cls,id,icn,title,sub,steps,ck,fn,foot,qt){const n=steps.filter((_,k)=>ck[k]).length,op=OPEN===id;
  return `<div class="card ex chk ${cls} ${op?'open':''}"><div class="exh" role="button" tabindex="0" onclick="tg(${id})"><span class="st">${ic(icn,24)}</span><span class="nm">${title}<small>${sub}</small></span><span class="cnt">${n}/${steps.length}</span></div>`+
  (op?`<div class="exb">${steps.map((s,k)=>{const nm=s[0].replace(/^A\/M · /,""),q=qt&&(qt==="str"||/^A\/M · /.test(s[0]));
-  return `<label class="wr ${ck[k]?'ck':''}"><input type="checkbox" ${ck[k]?'checked':''} onchange="${fn}(${k},this.checked)"><span class="wtx">${s[0]}<small>${s[1]}</small></span>${q?`<span class="qm" role="button" aria-label="Voir l’exercice" data-n="${esc(nm)}" onclick="event.preventDefault();event.stopPropagation();qs(this,'${qt}')">?</span>`:""}<button type="button" class="xr" aria-label="Retirer" onclick="event.preventDefault();event.stopPropagation();rmItem('${qt}',${k})">${ic("trash",16)}</button></label>`}).join("")}<div class="lact"><button type="button" class="btn sm" onclick="addItem('${qt}')">${ic("plus",16)} Ajouter</button>${listStore(qt)[wkey()]?`<button type="button" class="btn sm" onclick="resetList('${qt}')">Rétablir</button>`:""}${steps.length?`<button type="button" class="btn sm r rg" onclick="clearList('${qt}')">${ic("trash",16)} Tout supprimer</button>`:""}</div><p class="hint">${foot}</p></div>`:"")+`</div>`}
+  return `<label class="wr ${ck[k]?'ck':''}"><input type="checkbox" ${ck[k]?'checked':''} onchange="${fn}(${k},this.checked)"><span class="wtx">${s[0]}<small>${s[1]}</small></span>${q?`<span class="qm" role="button" aria-label="Voir l’exercice" data-n="${esc(nm)}" onclick="event.preventDefault();event.stopPropagation();qs(this,'${qt}')">?</span>`:""}${isLocked()?"":`<button type="button" class="xr" aria-label="Retirer" onclick="event.preventDefault();event.stopPropagation();rmItem('${qt}',${k})">${ic("trash",16)}</button>`}</label>`}).join("")}${isLocked()?"":`<div class="lact"><button type="button" class="btn sm" onclick="addItem('${qt}')">${ic("plus",16)} Ajouter</button>${listStore(qt)[wkey()]?`<button type="button" class="btn sm" onclick="resetList('${qt}')">Rétablir</button>`:""}${steps.length?`<button type="button" class="btn sm r rg" onclick="clearList('${qt}')">${ic("trash",16)} Tout supprimer</button>`:""}</div>`}<p class="hint">${foot}</p></div>`:"")+`</div>`}
 function topOf(t){const a=String(t).split("-").map(Number).filter(x=>x>0);return a.length?Math.max(...a):0}
 function lowOf(t){const a=String(t).split("-").map(Number).filter(x=>x>0);return a.length?Math.min(...a):10}
 function suggest(e,p){if(!p||!p.sets.length)return"";const top=topOf(e.t),sec=/gainage/i.test(e.n);
@@ -391,12 +409,12 @@ function suggest(e,p){if(!p||!p.sets.length)return"";const top=topOf(e.t),sec=/g
   return `<div class="tip g">${ic("bulb",20)}<div>Objectif atteint. Ajoute des reps, ralentis le mouvement ou choisis une variante plus difficile.</div></div>`}
  if(p.sets.some(done))return `<div class="tip o">${ic("bulb",20)}<div>Vise ${top}${sec?" s":" reps"} sur toutes les séries avant d’augmenter la charge.</div></div>`;return""}
 function msgBubble(st){const r=st.goal-st.week;
- if(st.week>=st.goal)return"Objectif de la semaine atteint ! Ta série est en sécurité.";
- if(st.streak>0)return `Série de ${plural(st.streak,"semaine","semaines")} ! Plus que ${plural(r,"séance","séances")} cette semaine.`;
- return `Valide ${plural(st.goal,"séance","séances")} cette semaine pour lancer ta série !`}
+ if(st.week>=st.goal)return"Objectif atteint ! Série en sécurité.";
+ if(st.streak>0)return `Série : ${st.streak} sem. ! Encore ${plural(r,"séance","séances")}.`;
+ return `Valide ${plural(st.goal,"séance","séances")} pour lancer ta série !`}
 function log(){const st=stats(),S=cd();let tot=0,dn=0;S.ex.forEach(e=>e.sets.forEach(s=>{tot++;if(done(s))dn++}));
- let h=`<div class="bubble">${mascot(64)}<div class="say">${msgBubble(st)}</div></div>
- <div class="wkbar"><select onchange="W=+this.value;OPEN=null;render()">${wk().map(w=>`<option value="${w}" ${w==W?'selected':''}>Semaine ${w}</option>`).join("")}</select><button class="btn sm" onclick="addWeek()" aria-label="Nouvelle semaine">${ic("plus",20)}</button></div>
+ let h=`<div class="topg ${S.ex.length?'withc':''}"><div class="bubble">${mascot(S.ex.length?44:64)}<div class="say">${msgBubble(st)}</div></div>
+ <div class="wkbar"><select onchange="W=+this.value;OPEN=null;render()">${wk().map(w=>`<option value="${w}" ${w==W?'selected':''}>Semaine ${w}</option>`).join("")}</select><button class="btn sm" onclick="addWeek()" aria-label="Nouvelle semaine">${ic("plus",20)}</button></div>${S.ex.length?chrBox():""}</div>
  <div class="days">${DAYS.map(d=>{const x=D.weeks[W][d],pl=x.ex.length>0,fi=D.sessions[dayKey(W,d)],pa=pl&&x.ex.some(e=>e.sets.some(done));
   return `<button class="dc ${d==day?'sel':''} ${fi?'fin':pa?'part':pl?'plan':'rest'}" onclick="day='${d}';OPEN=null;render()"><i>${fi?ic("check",20,"thick"):DL[d]}</i>${d}</button>`}).join("")}</div>
  <h2 class="sname">${S.name}</h2>`;
@@ -409,31 +427,50 @@ function log(){const st=stats(),S=cd();let tot=0,dn=0;S.ex.forEach(e=>e.sets.for
    e.sets.forEach((s,k)=>{const q=p&&p.sets[k];
     const kv=s.kg!==""?fmt(s.kg):(q&&q.kg!==""?fmt(q.kg):"–"),rv=s.reps!==""?s.reps:(q&&q.reps!==""?q.reps:"–");
     h+=`<div class="set"><span class="n">${k+1}</span><button class="num ${s.kg===''?'ph':''}" onclick="pickNum(${i},${k},'kg')">${kv}</button><button class="num ${s.reps===''?'ph':''}" onclick="pickNum(${i},${k},'reps')">${rv}</button><button class="ckb ${s.ok?'on':''}" onclick="setv(${i},${k},'ok',${!s.ok})" aria-label="Valider la série">${ic("check",26,"thick")}</button></div>`});
-   h+=(p?`<div class="hint">Chiffres gris = séance précédente</div>`:"")+`<button class="btn sm r" style="margin-top:10px" onclick="rmEx(${i})">${ic("trash",18)} Retirer l’exercice</button></div>`}
+   h+=(p?`<div class="hint">Chiffres gris = séance précédente</div>`:"")+(isLocked()?"":`<button class="btn sm r" style="margin-top:10px" onclick="rmEx(${i})">${ic("trash",18)} Retirer l’exercice</button>`)+`</div>`}
   h+=`</div>`});
- h+=`<button class="btn big" style="margin-top:0;margin-bottom:12px" onclick="addItem('ex')">${ic("plus",20)} Ajouter un exercice</button>`;
+ h+=D.sessions[dayKey(W,day)]?"":`<button class="btn big" style="margin-top:0;margin-bottom:12px" onclick="addItem('ex')">${ic("plus",20)} Ajouter un exercice</button>`;
  h+=checklist("st2",-2,"lotus","Étirements","Fin de séance · environ 8 min",listGet("str"),D.stretch[wkey()]||[],"schk","Étirements doux : tiens chaque position sans douleur, en respirant calmement.","str");
  const fi=D.sessions[dayKey(W,day)];
- h+=fi?`<div class="card finc"><span>${ic("check",22,"thick")} Séance terminée le ${frd(fi)}</span><button class="btn sm r" onclick="undoFinish()">Annuler</button></div>`:`<button class="btn g big" onclick="finish()" ${dn?'':'disabled'}>Terminer la séance</button>`;
+ h+=fi?`<div class="card finc"><span>${ic("check",22,"thick")} Séance terminée le ${frd(fi)}${chrMs(D.chr[dayKey(W,day)])>=1000?" · "+fmtDur(chrMs(D.chr[dayKey(W,day)])):""}</span></div><p class="hint" style="text-align:center">Séance verrouillée : plus aucune modification possible.</p>`:`<button class="btn g big" onclick="finishAsk()" ${dn?'':'disabled'}>Terminer la séance</button>`;
  $("m").innerHTML=h}
 function prev(w,ex){for(const x of wk().filter(k=>k<w).reverse())for(const dd of DAYS)for(const e of D.weeks[x][dd].ex)if(e.n===ex&&e.sets.some(s=>s.kg!==""||s.reps!==""))return e;return null}
-function pickNum(i,k,f){const ex=cd().ex[i],s=ex.sets[k],p=prev(W,ex.n),q=p&&p.sets[k],sec=/gainage/i.test(ex.n),ttl=ex.n+" · série "+(k+1);
+function pickNum(i,k,f){if(isLocked()){lockMsg();return}const ex=cd().ex[i],s=ex.sets[k],p=prev(W,ex.n),q=p&&p.sets[k],sec=/gainage/i.test(ex.n),ttl=ex.n+" · série "+(k+1);
  if(f==="kg")wheel({title:ttl,unit:"kg",min:0,max:300,dec:QUA,val:s.kg,def:q&&q.kg!==""?q.kg:10,clear:true,onOk:v=>setv(i,k,"kg",v)});
  else wheel({title:ttl,unit:sec?"sec":"reps",min:0,max:sec?600:200,dec:null,val:s.reps,def:q&&q.reps!==""?q.reps:lowOf(ex.t),clear:true,onOk:v=>setv(i,k,"reps",v)})}
-function setv(i,k,f,v){const ex=cd().ex[i],s=ex.sets[k],was=s.ok;s[f]=(f=="ok")?v:(v===""?"":+v);
+function setv(i,k,f,v){if(isLocked()){lockMsg();keep();return}const ex=cd().ex[i],s=ex.sets[k],was=s.ok,old=s[f];s[f]=(f=="ok")?v:(v===""?"":+v);
+ if(f=="kg"&&v!==""&&v!=null)ex.sets.forEach((x,j)=>{if(j!==k&&!x.ok&&(x.kg===""||(j>k&&old!==""&&+x.kg===+old)))x.kg=+v});
+ chrAuto();
  if(f=="ok"&&v&&!was){if(navigator.vibrate)navigator.vibrate(25);if(isRecord(ex,s)){D.recs++;toast("Nouveau record ! "+ex.n+" : "+recText(ex.n,s),"trophy")}}
- checkBadges().forEach(b=>toast("Badge débloqué : "+b[2],b[1]));if(f=="ok"){if(v&&!was&&k<ex.sets.length-1)restStart(ex.n);else if(!v)restCancel(ex.n)}keep()}
-function finish(){const key=dayKey(W,day);if(D.sessions[key])return;restEnd(false);const before=stats();let n=0;cd().ex.forEach(e=>e.sets.forEach(s=>{if(done(s))n++}));
- D.sessions[key]=today();const after=stats(),nb=checkBadges();
- const lines=[["bolt",`+${n*10+50} XP (${plural(n,"série","séries")} + bonus séance)`]];
+ checkBadges().forEach(b=>toast("Badge débloqué : "+b[2],b[1]));
+ if(f=="ok"){if(v&&!was){if(k<ex.sets.length-1)restStart(ex.n);else if(i<cd().ex.length-1&&ex.sets.every(x=>x.ok))restStart(ex.n,D.settings.restEx,"Repos avant l’exercice suivant")}else if(!v)restCancel(ex.n)}keep()}
+function exDone(e){return e.sets.length>0&&e.sets.every(x=>x.ok)}
+function sessInfo(){let n=0;const S=cd();S.ex.forEach(e=>e.sets.forEach(x=>{if(done(x))n++}));return{n,nEx:S.ex.filter(exDone).length}}
+function finishAsk(){const key=dayKey(W,day);if(D.sessions[key])return;const nEx=sessInfo().nEx;
+ $("md").innerHTML=`<div class="sheet" onclick="event.stopPropagation()"><h2>Terminer la séance ?</h2><p>Si tu confirmes, il sera <b>impossible de revenir en arrière</b> : plus aucune modification des poids, des reps ou des exercices cochés.</p>
+ ${nEx>=5?`<p class="hint">${plural(nEx,"exercice terminé","exercices terminés")} : tu vas recevoir ton XP.</p>`:`<p class="hint">Seulement ${plural(nEx,"exercice terminé","exercices terminés")}. Il en faut au moins 5 pour recevoir de l’XP : cette séance n’en rapportera pas.</p>`}
+ <button class="btn g big" onclick="closeSheet();finish()">Confirmer</button><button class="btn big" onclick="closeSheet()">Retour</button></div>`;$("md").classList.add("open")}
+function finish(){const key=dayKey(W,day);if(D.sessions[key])return;restEnd(false);const before=stats(),{n,nEx}=sessInfo(),xp=nEx>=5?50+n*10:0;
+ chrStop(key);D.sxp[key]=xp;D.sessions[key]=today();const after=stats(),nb=checkBadges(),ms=chrMs(D.chr[key]);
+ const lines=[xp?["bolt",`+${xp} XP (${plural(n,"série","séries")} + bonus séance)`]:["bolt",`Pas d’XP : il faut 5 exercices terminés (${nEx} ici)`]];
+ if(ms>=1000)lines.push(["clock","Durée : "+fmtDur(ms)]);
  lines.push(after.streak>before.streak?["flame",`Série : ${plural(after.streak,"semaine","semaines")} !`]:["flame",`${after.week}/${after.goal} séances cette semaine`]);
  if(after.level>before.level)lines.push(["star",`Niveau ${after.level} atteint !`]);
  nb.forEach(b=>lines.push([b[1],`Badge : ${b[2]}`]));
  const weekDone=DAYS.filter(d=>D.weeks[W][d].ex.length).every(d=>D.sessions[dayKey(W,d)]),ws=wk(),nx=ws.find(x=>x>W);
  const o={title:"Séance terminée !",lines};
- if(weekDone){lines.unshift(["check",`Semaine ${W} complétée`]);if(nx){o.btn="Semaine suivante";o.btn2=true;o.onok=()=>{W=nx;day=DAYS.find(d=>D.weeks[W][d].ex.length)||"Mar";OPEN=null;render()}}}
+ if(weekDone){lines.unshift(["check",`Semaine ${W} complétée`]);if(nx){o.btn="Semaine suivante";o.btn2=true;o.onok=()=>{W=nx;day=todayDay();OPEN=null;render()}}}
  save();keep();celebrate(o)}
-function undoFinish(){if(confirm("Annuler la validation de cette séance ?")){delete D.sessions[dayKey(W,day)];keep()}}
+const isLocked=()=>!!D.sessions[dayKey(W,day)];
+function lockMsg(){toast("Séance terminée : plus de modification possible","warn")}
+function chrMs(c){return c?c.acc+(c.st?Date.now()-c.st:0):0}
+function fmtDur(ms){const t=Math.floor(ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sc=t%60;return h?h+":"+p2(m)+":"+p2(sc):p2(m)+":"+p2(sc)}
+function chrBox(){const key=dayKey(W,day),c=D.chr[key],fi=D.sessions[key],ms=chrMs(c),run=!!(c&&c.st);
+ return `<div class="chr ${run?'run':''}"><small>${fi?'Durée de la séance':'Chrono de séance'}</small><b id="chrt">${fi&&ms<1000?'–':fmtDur(ms)}</b>${fi?'':`<button class="btn sm ${run?'':'g'}" onclick="chrToggle()">${ic(run?'pause':'play',18)} ${run?'Pause':(ms?'Reprendre':'Démarrer')}</button>`}</div>`}
+function chrToggle(){const key=dayKey(W,day);if(D.sessions[key])return;const c=D.chr[key]||(D.chr[key]={acc:0,st:null});if(c.st){c.acc+=Date.now()-c.st;c.st=null}else c.st=Date.now();keep()}
+function chrAuto(){const key=dayKey(W,day);if(D.sessions[key])return;const c=D.chr[key]||(D.chr[key]={acc:0,st:null});if(!c.st&&!c.acc)c.st=Date.now()}
+function chrStop(key){const c=D.chr[key];if(c&&c.st){c.acc+=Date.now()-c.st;c.st=null}}
+setInterval(()=>{const el=$("chrt");if(!el||mode!=="log")return;const c=D.chr[dayKey(W,day)];if(c&&c.st)el.textContent=fmtDur(chrMs(c))},500);
 function addWeek(){const n=Math.max(...wk())+1;D.weeks[n]=JSON.parse(JSON.stringify(D.weeks[n-1]));
  Object.values(D.weeks[n]).forEach(s=>s.ex.forEach(e=>e.sets.forEach(x=>{x.reps="";x.ok=false})));W=n;OPEN=null;render()}
 
@@ -591,20 +628,42 @@ function drawBody(){const T=+P().taille||0,m=$("bm").value;const pts=wk().filter
 function idb(){return new Promise((ok,no)=>{const r=indexedDB.open("diary2-photos",1);r.onupgradeneeded=()=>r.result.createObjectStore("p",{keyPath:"id"});r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
 async function pdb(mode,fn){const db=await idb();return new Promise((ok,no)=>{const t=db.transaction("p",mode),rq=fn(t.objectStore("p"));t.oncomplete=()=>ok(rq&&rq.result);t.onerror=()=>no(t.error)})}
 function shrink(file){return new Promise((ok,no)=>{const img=new Image(),u=URL.createObjectURL(file);img.onload=()=>{const r=Math.min(1,1280/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*r);c.height=Math.round(img.height*r);c.getContext("2d").drawImage(img,0,0,c.width,c.height);c.toBlob(b=>{URL.revokeObjectURL(u);b?ok(b):no()},"image/jpeg",.85)};img.onerror=()=>no();img.src=u})}
-let CMP=[],PU=[];
-function photosPage(){$("m").innerHTML=`${back()}<div class="title">Photos de <span>progression</span></div>
- <div class="card"><div class="grid2"><label>Date<input type="date" id="phd" value="${today()}"></label><label>Photo<input type="file" id="phf" accept="image/*" onchange="addPhoto(this)"></label></div>
- <p class="hint">Les photos restent sur cet appareil (non envoyées sur Internet). Touche « Comparer » sur deux photos pour les voir côte à côte.</p></div>
- <div id="cmpbox"></div><div class="card"><div class="pg" id="pgl"><span class="hint">Chargement…</span></div></div>`;loadPhotos()}
-async function addPhoto(inp){const f=inp.files[0];if(!f)return;try{const b=await shrink(f);await pdb("readwrite",s=>s.put({id:Date.now()+"-"+Math.random().toString(36).slice(2,8),date:$("phd").value||today(),blob:b}));toast("Photo ajoutée","camera");loadPhotos()}catch(e){toast("Impossible d’enregistrer la photo","warn")}inp.value=""}
-async function loadPhotos(){try{const list=((await pdb("readonly",s=>s.getAll()))||[]).sort((a,b)=>b.date.localeCompare(a.date));PU.forEach(u=>URL.revokeObjectURL(u));PU=[];ZL=[];
- const urls={};list.forEach(p=>{urls[p.id]=URL.createObjectURL(p.blob);PU.push(urls[p.id]);ZL.push(urls[p.id])});
- if(!list.length){$("pgl").innerHTML='<span class="hint">Aucune photo pour le moment.</span>';$("cmpbox").innerHTML="";return}
- $("pgl").innerHTML=list.map((p,i)=>`<div class="pgi ${CMP.includes(p.id)?'sel':''}"><img alt="Photo du ${p.date}" src="${urls[p.id]}" onclick="zoom(${i},'${p.date}')"><p>${frd(p.date)}</p><button class="btn sm" style="width:100%;margin-bottom:6px" data-id="${p.id}" onclick="cmpPick(this.dataset.id)">${CMP.includes(p.id)?'Choisie':'Comparer'}</button><button class="btn sm r" style="width:100%" data-id="${p.id}" onclick="delPhoto(this.dataset.id)">Supprimer</button></div>`).join("");
- const a=list.find(p=>p.id===CMP[0]),b=list.find(p=>p.id===CMP[1]);
- $("cmpbox").innerHTML=a&&b?`<div class="card"><h3 style="margin-bottom:10px">Comparaison</h3><div class="cmp"><div><img alt="" src="${urls[a.id]}"><p class="hint" style="text-align:center">${frd(a.date)}</p></div><div><img alt="" src="${urls[b.id]}"><p class="hint" style="text-align:center">${frd(b.date)}</p></div></div></div>`:""}catch(e){$("pgl").innerHTML='<span class="hint">Stockage des photos indisponible sur ce navigateur.</span>'}}
-function cmpPick(id){CMP=CMP.includes(id)?CMP.filter(x=>x!==id):[...CMP,id].slice(-2);loadPhotos()}
-async function delPhoto(id){if(!confirm("Supprimer cette photo ?"))return;try{await pdb("readwrite",s=>s.delete(id));CMP=CMP.filter(x=>x!==id);loadPhotos()}catch(e){toast("Suppression impossible","warn")}}
+let PU=[],PBY={},PURL={},PHM=null,SELD=null,CMODE=0,CMPD=[];
+const MOIS=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+function photosPage(){if(!PHM){const d=new Date();PHM=new Date(d.getFullYear(),d.getMonth(),1)}
+ $("m").innerHTML=`${back()}<div class="title">Photos de <span>progression</span></div>
+ <div class="card"><div class="grid2"><label>Date<input type="date" id="phd" value="${today()}"></label><label>Photo(s)<input type="file" id="phf" accept="image/*" multiple onchange="addPhoto(this)"></label></div>
+ <p class="hint">Les photos restent sur cet appareil (non envoyées sur Internet). Les photos d’un même jour sont regroupées dans le calendrier : touche un jour pour les voir.</p></div>
+ <div id="pcalbox"></div><div id="cmpbox"></div><div id="daybox"></div>`;loadPhotos()}
+async function addPhoto(inp){const fs=[...inp.files];if(!fs.length)return;const date=$("phd").value||today();let ok=0;
+ for(const f of fs){try{const b=await shrink(f);await pdb("readwrite",st=>st.put({id:Date.now()+"-"+Math.random().toString(36).slice(2,8),date,blob:b}));ok++}catch(e){}}
+ if(ok){toast(ok>1?ok+" photos ajoutées":"Photo ajoutée","camera");SELD=date;CMODE=0;CMPD=[];const d=new Date(date+"T12:00:00");PHM=new Date(d.getFullYear(),d.getMonth(),1)}else toast("Impossible d’enregistrer la photo","warn");
+ inp.value="";loadPhotos()}
+async function loadPhotos(){try{const list=((await pdb("readonly",st=>st.getAll()))||[]).sort((a,b)=>b.date.localeCompare(a.date)||String(b.id).localeCompare(String(a.id)));
+ PU.forEach(u=>URL.revokeObjectURL(u));PU=[];ZL=[];PBY={};PURL={};
+ list.forEach((p,i)=>{const u=URL.createObjectURL(p.blob);PU.push(u);ZL.push(u);PURL[p.id]=u;(PBY[p.date]=PBY[p.date]||[]).push({p,i})});
+ if(CMPD.some(d=>!PBY[d])){CMPD=[];CMODE=0}
+ drawPh()}catch(e){const el=$("pcalbox");if(el)el.innerHTML='<div class="card"><span class="hint">Stockage des photos indisponible sur ce navigateur.</span></div>'}}
+function pnav(n){PHM=new Date(PHM.getFullYear(),PHM.getMonth()+n,1);drawPh()}
+function cmpStart(){CMODE=CMODE?0:1;CMPD=[];drawPh()}
+function pday(ds){
+ if(CMODE===0){SELD=ds;drawPh();return}
+ if(!PBY[ds]){toast("Aucune photo ce jour-là","warn");return}
+ if(CMODE===1){CMPD=[ds];CMODE=2}else if(CMODE===2){if(ds===CMPD[0]){toast("Choisis un autre jour","warn");return}CMPD.push(ds);CMODE=3}
+ drawPh()}
+function drawPh(){const cb=$("pcalbox");if(!cb||!PHM)return;const y=PHM.getFullYear(),mo=PHM.getMonth(),off=(new Date(y,mo,1).getDay()+6)%7,nd=new Date(y,mo+1,0).getDate();
+ let cells="";for(let i=0;i<off;i++)cells+='<span class="pcd e"></span>';
+ for(let d=1;d<=nd;d++){const ds=y+"-"+p2(mo+1)+"-"+p2(d),has=PBY[ds];
+  cells+=`<button class="pcd ${has?'has':''} ${ds===today()?'td':''} ${ds===SELD&&CMODE===0?'sel':''} ${CMPD.includes(ds)?'cmp':''}" onclick="pday('${ds}')" aria-label="${d} ${MOIS[mo]}">${d}${has?`<i>${has.length}</i>`:""}</button>`}
+ const msg=CMODE===1?"Choisis le 1er jour à comparer":CMODE===2?"Choisis le 2e jour à comparer":"";
+ cb.innerHTML=`<div class="card"><div class="pnav"><button class="btn sm" onclick="pnav(-1)" aria-label="Mois précédent"><span style="display:inline-flex;transform:rotate(180deg)">${ic("chevR",18)}</span></button><h3>${MOIS[mo]} ${y}</h3><button class="btn sm" onclick="pnav(1)" aria-label="Mois suivant">${ic("chevR",18)}</button></div>
+  <div class="pwd">${["L","M","M","J","V","S","D"].map(x=>`<span>${x}</span>`).join("")}</div><div class="pcal">${cells}</div>
+  ${msg?`<div class="tip o" style="margin-top:10px">${ic("bulb",20)}<div>${msg}</div></div>`:""}
+  <button class="btn ${CMODE?'r':'g'} big" style="margin-top:12px" onclick="cmpStart()">${CMODE===3?"Fermer la comparaison":CMODE?"Annuler":"Comparer deux jours"}</button></div>`;
+ $("cmpbox").innerHTML=CMODE===3&&CMPD.length===2?`<div class="card"><h3 style="margin-bottom:10px">Comparaison</h3><div class="cmp">${CMPD.map(d=>`<div class="cmpc"><h4>${frd(d)}</h4>${PBY[d].map(x=>`<img alt="Photo du ${d}" src="${PURL[x.p.id]}" onclick="zoom(${x.i},'${d}')">`).join("")}</div>`).join("")}</div></div>`:"";
+ const L=SELD&&PBY[SELD];
+ $("daybox").innerHTML=CMODE===0&&SELD?`<div class="card"><h3 style="margin-bottom:10px">${frd(SELD)}</h3>${L?`<div class="pg">${L.map(x=>`<div class="pgi"><img alt="Photo du ${SELD}" src="${PURL[x.p.id]}" onclick="zoom(${x.i},'${SELD}')"><button class="btn sm r" style="width:100%;margin-top:6px" data-id="${x.p.id}" onclick="delPhoto(this.dataset.id)">Supprimer</button></div>`).join("")}</div>`:'<span class="hint">Aucune photo ce jour-là.</span>'}</div>`:""}
+async function delPhoto(id){if(!confirm("Supprimer cette photo ?"))return;try{await pdb("readwrite",st=>st.delete(id));loadPhotos()}catch(e){toast("Suppression impossible","warn")}}
 
 /* ---------- rappels (appli ouverte) ---------- */
 const DN=["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
@@ -628,10 +687,12 @@ function setPage(){const s=D.settings,sup="wakeLock"in navigator;
  $("m").innerHTML=`${back()}<div class="title"><span>Réglages</span></div>
  <div class="card"><h3 style="margin-bottom:8px">Objectif hebdomadaire</h3><button class="num" onclick="wGoal()">${plural(s.goal,"séance","séances")} par semaine</button>
  <p class="hint">Ta série compte les semaines consécutives où tu atteins cet objectif. Les jours de repos prévus ne la cassent pas.</p></div>
- <div class="card"><h3 style="margin-bottom:8px">Temps de repos entre les séries</h3><select onchange="setRest(this.value)">${REST_OPTS.map(t=>`<option value="${t}" ${t==s.rest?'selected':''}>${restLab(t)}</option>`).join("")}</select>
- <p class="hint">Après chaque série validée, un minuteur démarre (sauf après la dernière série d’un exercice). De 1 min 30 à 6 min.</p>
+ <div class="card"><h3 style="margin-bottom:8px">Temps de repos</h3>
+ <label class="fl">Entre les séries<select onchange="setRest(this.value)">${REST_OPTS.map(t=>`<option value="${t}" ${t==s.rest?'selected':''}>${restLab(t)}</option>`).join("")}</select></label>
+ <label class="fl" style="margin-top:10px">Après chaque exercice (2 à 6 min)<select onchange="setRestEx(this.value)">${REST_EX.map(t=>`<option value="${t}" ${t==s.restEx?'selected':''}>${restLab(t)}</option>`).join("")}</select></label>
+ <p class="hint">Un minuteur démarre après chaque série validée, sauf la dernière de l’exercice : là, c’est le repos plus long avant l’exercice suivant qui se lance.</p>
  <div class="lact"><button class="btn sm ${s.snd?'g':''}" onclick="toggleSnd()">Son de fin : ${s.snd?'activé':'coupé'}</button><button class="btn sm" onclick="testSnd()">Tester le son</button></div>
- <p class="hint">Si tu n’entends rien sur iPhone, vérifie que le volume des médias est monté.</p></div>
+ <p class="hint">Le son se mélange à ta musique sans la couper. Sur iPhone, il est coupé si le bouton silencieux est activé.</p></div>
  <div class="card"><h3 style="margin-bottom:8px">Apparence</h3><button class="btn ${s.dark?'':'g'} big" style="margin-top:0" onclick="toggleDark()">${s.dark?'Revenir au mode jour':'Activer le mode sombre'}</button>
  <p class="hint">Le mode jour est le réglage par défaut.</p></div>
  <div class="card"><h3 style="margin-bottom:8px">Écran allumé pendant l’entraînement</h3><button class="btn ${s.wake?'':'g'} big" style="margin-top:0" onclick="D.settings.wake=!D.settings.wake;save();applyWake();setPage()">${s.wake?'Désactiver':'Activer'}</button>
@@ -639,63 +700,55 @@ function setPage(){const s=D.settings,sup="wakeLock"in navigator;
  <div class="card"><h3 style="margin-bottom:8px">Zone sensible</h3><button class="btn r big" style="margin-top:0" onclick="if(confirm('Effacer toutes les données de cette version ? (Ton ancienne appli n’est pas touchée.)')){localStorage.removeItem(KEY);location.reload()}">Réinitialiser cette version</button></div>`}
 
 function tapV(){try{if(navigator.vibrate)navigator.vibrate(15)}catch(e){}}
-/* ---------- thème jour / nuit ---------- */
+let LASTD=today();
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&today()!==LASTD){LASTD=today();day=todayDay();OPEN=null;if(mode==="log")render()}});
 function applyTheme(){const dk=!!D.settings.dark;document.documentElement.classList.toggle("dark",dk);const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",dk?"#15121f":"#f6f4fc")}
 function toggleDark(){D.settings.dark=!D.settings.dark;applyTheme();save();setPage()}
-
-/* ---------- minuteur de repos entre les séries ---------- */
-const REST_OPTS=[90,120,150,180,210,240,270,300,330,360];
+const REST_OPTS=[90,120,150,180,210,240,270,300,330,360],REST_EX=[120,150,180,210,240,270,300,330,360];
 const restLab=t=>{const m=Math.floor(t/60),r=t%60;return m+" min"+(r?" "+r:"")};
 const mmss=t=>Math.floor(t/60)+":"+p2(t%60);
-let REST=null,RT=null,AC=null,SND=null;
-function mkWav(){const sr=22050,len=Math.floor(sr*2.7),buf=new Int16Array(len),notes=[[659.25,0],[783.99,.2],[1046.5,.4],[659.25,1.2],[783.99,1.4],[1046.5,1.6]];
- notes.forEach(([f,t0])=>{const st=Math.floor(t0*sr);for(let i=st;i<len;i++){const t=(i-st)/sr;if(t>1)break;const e=Math.exp(-t*3.5)*Math.min(1,t*300);buf[i]+=Math.round((Math.sin(6.2832*f*t)+.35*Math.sin(12.5664*f*t))*e*8500)}});
- const n=len*2,d=new DataView(new ArrayBuffer(44+n)),w=(o,s)=>{for(let i=0;i<s.length;i++)d.setUint8(o+i,s.charCodeAt(i))};
- w(0,"RIFF");d.setUint32(4,36+n,true);w(8,"WAVEfmt ");d.setUint32(16,16,true);d.setUint16(20,1,true);d.setUint16(22,1,true);d.setUint32(24,sr,true);d.setUint32(28,sr*2,true);d.setUint16(32,2,true);d.setUint16(34,16,true);w(36,"data");d.setUint32(40,n,true);
- for(let i=0;i<len;i++)d.setInt16(44+i*2,Math.max(-32768,Math.min(32767,buf[i])),true);
- return new Blob([d],{type:"audio/wav"})}
-function sndUnlock(){try{if(!SND){SND=new Audio(URL.createObjectURL(mkWav()));SND.preload="auto";SND.volume=1}
- SND.muted=true;const p=SND.play();if(p&&p.then)p.then(()=>{SND.pause();SND.currentTime=0;SND.muted=false}).catch(()=>{SND.muted=false})}catch(e){}
- try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume()}catch(e){}}
-function chime(){let ok=false;try{if(SND){SND.muted=false;SND.currentTime=0;const p=SND.play();ok=true;if(p&&p.catch)p.catch(beep)}}catch(e){}if(!ok)beep()}
+let REST=null,RT=null,AC=null;
+function audioInit(){try{if(navigator.audioSession)navigator.audioSession.type="ambient"}catch(e){}
+ try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state!=="running")AC.resume()}catch(e){}}
+function chime(){audioInit();if(!AC)return;try{const t0=AC.currentTime+.05;
+ [[659.25,0],[783.99,.2],[1046.5,.4],[659.25,1.2],[783.99,1.4],[1046.5,1.6]].forEach(([f,d])=>{[[1,.5],[2,.14]].forEach(([m,a])=>{const o=AC.createOscillator(),g=AC.createGain();o.type="sine";o.frequency.value=f*m;o.connect(g);g.connect(AC.destination);
+  const t=t0+d;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(a,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+1);o.start(t);o.stop(t+1.05)})})}catch(e){}}
 function toggleSnd(){D.settings.snd=!D.settings.snd;save();setPage()}
-function testSnd(){sndUnlock();setTimeout(chime,150)}
-function setRest(v){D.settings.rest=Math.min(360,Math.max(90,+v||90));save();toast("Repos : "+restLab(D.settings.rest),"clock")}
+function testSnd(){audioInit();setTimeout(chime,100)}
+function setRest(v){D.settings.rest=Math.min(360,Math.max(90,+v||90));save();toast("Repos entre séries : "+restLab(D.settings.rest),"clock")}
+function setRestEx(v){D.settings.restEx=Math.min(360,Math.max(120,+v||120));save();toast("Repos entre exercices : "+restLab(D.settings.restEx),"clock")}
 function restBar(){let el=$("rbar");if(!el){el=document.createElement("div");el.id="rbar";el.className="rbar";el.setAttribute("role","timer");document.body.appendChild(el)}return el}
-function restStart(name){const tot=Math.min(360,Math.max(90,+D.settings.rest||90));REST={end:Date.now()+tot*1000,tot,name};
- sndUnlock();
+function restStart(name,tot0,label){const tot=Math.min(360,Math.max(60,+tot0||+D.settings.rest||90));REST={end:Date.now()+tot*1000,tot,name,label};
+ audioInit();
  const el=restBar();el.innerHTML=`<div class="rt"><small id="rtn"></small><b id="rtv"></b><div class="pbar y"><b id="rtb" style="width:100%"></b></div></div><button class="btn sm" id="rtp" onclick="restAdd()">+30 s</button><button class="btn sm r" onclick="restEnd(false)">Passer</button>`;
  el.classList.add("on");document.body.classList.add("resting");clearInterval(RT);RT=setInterval(restTick,250);restTick()}
 function restTick(){if(!REST)return;const ms=REST.end-Date.now();if(ms<=0){restEnd(true);return}const left=Math.ceil(ms/1000);
- const v=$("rtv"),b=$("rtb"),n=$("rtn"),p=$("rtp");if(!v)return;v.textContent=mmss(left);n.textContent="Repos · "+REST.name;b.style.width=Math.max(0,Math.min(100,ms/(REST.tot*10)))+"%";p.disabled=REST.tot+30>360}
+ const v=$("rtv"),b=$("rtb"),n=$("rtn"),p=$("rtp");if(!v)return;v.textContent=mmss(left);n.textContent=REST.label||("Repos · "+REST.name);b.style.width=Math.max(0,Math.min(100,ms/(REST.tot*10)))+"%";p.disabled=REST.tot+30>360}
 function restAdd(){if(!REST||REST.tot+30>360)return;REST.tot+=30;REST.end+=30000;restTick()}
 function restCancel(name){if(REST&&REST.name===name)restEnd(false)}
-function beep(){try{if(!AC)return;[0,.28,.56].forEach(d=>{const o=AC.createOscillator(),g=AC.createGain();o.type="sine";o.frequency.value=880;o.connect(g);g.connect(AC.destination);const t=AC.currentTime+d;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.4,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.22);o.start(t);o.stop(t+.25)})}catch(e){}}
 function restEnd(nat){clearInterval(RT);RT=null;const was=REST;REST=null;const el=$("rbar");if(el)el.classList.remove("on");document.body.classList.remove("resting");
  if(nat&&was){try{if(navigator.vibrate)navigator.vibrate([250,120,250,120,400])}catch(e){}if(D.settings.snd!==false)chime();toast("Repos terminé : à toi de jouer !","clock")}}
 document.addEventListener("visibilitychange",()=>{if(REST)restTick()});
-
-/* ---------- séance personnalisable : ajouter / retirer ---------- */
 const stripP=x=>x.replace(/^(R|A\/M|P) · /,"");
 const listStore=t=>t==="warm"?D.wlist:D.slist;
 function listGet(t){return listStore(t)[wkey()]||(t==="warm"?warmup():stretches())}
 function listMat(t){const st=listStore(t),k=wkey();if(!st[k])st[k]=(t==="warm"?warmup():stretches()).map(x=>[x[0],x[1]]);return st[k]}
-function rmItem(t,idx){const l=listMat(t),ck=t==="warm"?D.warm:D.stretch,k=wkey();if(!l[idx])return;
+function rmItem(t,idx){if(isLocked()){lockMsg();return}const l=listMat(t),ck=t==="warm"?D.warm:D.stretch,k=wkey();if(!l[idx])return;
  if(!confirm("Retirer « "+stripP(l[idx][0])+" » de la liste ?"))return;l.splice(idx,1);if(ck[k])ck[k].splice(idx,1);keep()}
-function clearList(t){const l=listMat(t),ck=t==="warm"?D.warm:D.stretch,k=wkey();if(!l.length)return;
+function clearList(t){if(isLocked()){lockMsg();return}const l=listMat(t),ck=t==="warm"?D.warm:D.stretch,k=wkey();if(!l.length)return;
  if(!confirm(t==="warm"?"Supprimer tout l’échauffement de cette séance ?":"Supprimer tous les étirements de cette séance ?"))return;l.length=0;ck[k]=[];keep()}
-function resetList(t){if(!confirm("Rétablir la liste d’origine pour cette séance ?"))return;const k=wkey();delete listStore(t)[k];delete (t==="warm"?D.warm:D.stretch)[k];keep()}
-function rmEx(i){const S=cd(),e=S.ex[i];if(!e)return;const n=e.sets.filter(done).length;
+function resetList(t){if(isLocked()){lockMsg();return}if(!confirm("Rétablir la liste d’origine pour cette séance ?"))return;const k=wkey();delete listStore(t)[k];delete (t==="warm"?D.warm:D.stretch)[k];keep()}
+function rmEx(i){if(isLocked()){lockMsg();return}const S=cd(),e=S.ex[i];if(!e)return;const n=e.sets.filter(done).length;
  if(!confirm("Retirer « "+e.n+" » de cette séance ?"+(n?"\nLes "+plural(n,"série validée","séries validées")+" sur cet exercice seront perdues.":"")))return;
  S.ex.splice(i,1);OPEN=null;restEnd(false);keep()}
-function addItem(t){const lib=libData(),isEx=t==="ex",have=new Set(isEx?cd().ex.map(e=>e.n):listGet(t).map(x=>stripP(x[0])));
+function addItem(t){if(isLocked()){lockMsg();return}const lib=libData(),isEx=t==="ex",have=new Set(isEx?cd().ex.map(e=>e.n):listGet(t).map(x=>stripP(x[0])));
  const opts=lib[isEx?"ex":t].filter(x=>!have.has(x[0])),ttl=isEx?"Ajouter un exercice":t==="warm"?"Ajouter à l’échauffement":"Ajouter un étirement";
  $("md").innerHTML=`<div class="sheet" onclick="event.stopPropagation()"><button class="xb" onclick="closeSheet()" aria-label="Fermer">${ic("x",18)}</button><h2>${ttl}</h2>
  <label class="fl">Choisir dans la liste<select id="ai-s"><option value="">–</option>${opts.map(x=>`<option value="${esc(x[0])}">${esc(x[0])}</option>`).join("")}</select></label>
  <label class="fl" style="margin-top:10px">Ou écrire un nom<input id="ai-n" maxlength="60" placeholder="Nom"></label>
  ${isEx?`<div class="grid2" style="margin-top:10px"><label>Séries<select id="ai-k">${[1,2,3,4,5,6].map(n=>`<option ${n==3?'selected':''}>${n}</option>`).join("")}</select></label><label>Objectif (reps)<input id="ai-t" value="10-12" maxlength="7"></label></div>`:`<label class="fl" style="margin-top:10px">Détail (facultatif)<input id="ai-d" maxlength="60" placeholder="ex. 10 reps"></label>`}
  <button class="btn g big" onclick="addItemOk('${t}')">Ajouter</button></div>`;$("md").classList.add("open")}
-function addItemOk(t){const pick=$("ai-s").value,n=($("ai-n").value.trim()||pick).slice(0,60);if(!n){toast("Choisis ou écris un nom","warn");return}
+function addItemOk(t){if(isLocked()){closeSheet();lockMsg();return}const pick=$("ai-s").value,n=($("ai-n").value.trim()||pick).slice(0,60);if(!n){toast("Choisis ou écris un nom","warn");return}
  if(t==="ex"){let tg=$("ai-t").value.trim();if(!/^\d{1,3}(-\d{1,3})?$/.test(tg))tg="10-12";const S=cd();if(!S.ex.length&&S.name==="Repos")S.name="Séance perso";
   S.ex.push(E(n,+$("ai-k").value||3,tg));OPEN=S.ex.length-1}
  else{const l=listMat(t),own=$("ai-d").value.trim(),f=libData()[t].find(x=>x[0]===n);l.push([(t==="warm"?"A/M · ":"")+n,own||(f?f[1]:"")]);OPEN=t==="warm"?-1:-2}
