@@ -234,7 +234,7 @@ D.done=D.done||{};D.state=D.state||{};D.imgs=D.imgs||{};D.warm=D.warm||{};D.stre
 if(D.imgv!==IMGV){D.imgs={};D.imgv=IMGV}
 D.body=D.body||{p:{prenom:"",nom:"",age:"",taille:"",cible:""},w:{}};
 D.sessions=D.sessions||{};D.badges=D.badges||{};D.best=D.best||0;D.recs=D.recs||0;
-D.settings=Object.assign({goal:3,wake:false,dark:false,rest:90},D.settings||{});
+D.settings=Object.assign({goal:3,wake:false,dark:false,rest:90,snd:true},D.settings||{});
 D.settings.rest=Math.min(360,Math.max(90,+D.settings.rest||90));
 D.settings.rem=Object.assign({on:false,days:[2,4,6],time:"18:00",last:""},D.settings.rem||{});
 const wk=()=>Object.keys(D.weeks).map(Number).sort((a,b)=>a-b);
@@ -629,7 +629,9 @@ function setPage(){const s=D.settings,sup="wakeLock"in navigator;
  <div class="card"><h3 style="margin-bottom:8px">Objectif hebdomadaire</h3><button class="num" onclick="wGoal()">${plural(s.goal,"séance","séances")} par semaine</button>
  <p class="hint">Ta série compte les semaines consécutives où tu atteins cet objectif. Les jours de repos prévus ne la cassent pas.</p></div>
  <div class="card"><h3 style="margin-bottom:8px">Temps de repos entre les séries</h3><select onchange="setRest(this.value)">${REST_OPTS.map(t=>`<option value="${t}" ${t==s.rest?'selected':''}>${restLab(t)}</option>`).join("")}</select>
- <p class="hint">Après chaque série validée, un minuteur démarre (sauf après la dernière série d’un exercice). De 1 min 30 à 6 min.</p></div>
+ <p class="hint">Après chaque série validée, un minuteur démarre (sauf après la dernière série d’un exercice). De 1 min 30 à 6 min.</p>
+ <div class="lact"><button class="btn sm ${s.snd?'g':''}" onclick="toggleSnd()">Son de fin : ${s.snd?'activé':'coupé'}</button><button class="btn sm" onclick="testSnd()">Tester le son</button></div>
+ <p class="hint">Si tu n’entends rien sur iPhone, vérifie que le volume des médias est monté.</p></div>
  <div class="card"><h3 style="margin-bottom:8px">Apparence</h3><button class="btn ${s.dark?'':'g'} big" style="margin-top:0" onclick="toggleDark()">${s.dark?'Revenir au mode jour':'Activer le mode sombre'}</button>
  <p class="hint">Le mode jour est le réglage par défaut.</p></div>
  <div class="card"><h3 style="margin-bottom:8px">Écran allumé pendant l’entraînement</h3><button class="btn ${s.wake?'':'g'} big" style="margin-top:0" onclick="D.settings.wake=!D.settings.wake;save();applyWake();setPage()">${s.wake?'Désactiver':'Activer'}</button>
@@ -644,20 +646,32 @@ function toggleDark(){D.settings.dark=!D.settings.dark;applyTheme();save();setPa
 const REST_OPTS=[90,120,150,180,210,240,270,300,330,360];
 const restLab=t=>{const m=Math.floor(t/60),r=t%60;return m+" min"+(r?" "+r:"")};
 const mmss=t=>Math.floor(t/60)+":"+p2(t%60);
-let REST=null,RT=null,AC=null;
+let REST=null,RT=null,AC=null,SND=null;
+function mkWav(){const sr=22050,len=Math.floor(sr*2.7),buf=new Int16Array(len),notes=[[659.25,0],[783.99,.2],[1046.5,.4],[659.25,1.2],[783.99,1.4],[1046.5,1.6]];
+ notes.forEach(([f,t0])=>{const st=Math.floor(t0*sr);for(let i=st;i<len;i++){const t=(i-st)/sr;if(t>1)break;const e=Math.exp(-t*3.5)*Math.min(1,t*300);buf[i]+=Math.round((Math.sin(6.2832*f*t)+.35*Math.sin(12.5664*f*t))*e*8500)}});
+ const n=len*2,d=new DataView(new ArrayBuffer(44+n)),w=(o,s)=>{for(let i=0;i<s.length;i++)d.setUint8(o+i,s.charCodeAt(i))};
+ w(0,"RIFF");d.setUint32(4,36+n,true);w(8,"WAVEfmt ");d.setUint32(16,16,true);d.setUint16(20,1,true);d.setUint16(22,1,true);d.setUint32(24,sr,true);d.setUint32(28,sr*2,true);d.setUint16(32,2,true);d.setUint16(34,16,true);w(36,"data");d.setUint32(40,n,true);
+ for(let i=0;i<len;i++)d.setInt16(44+i*2,Math.max(-32768,Math.min(32767,buf[i])),true);
+ return new Blob([d],{type:"audio/wav"})}
+function sndUnlock(){try{if(!SND){SND=new Audio(URL.createObjectURL(mkWav()));SND.preload="auto";SND.volume=1}
+ SND.muted=true;const p=SND.play();if(p&&p.then)p.then(()=>{SND.pause();SND.currentTime=0;SND.muted=false}).catch(()=>{SND.muted=false})}catch(e){}
+ try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume()}catch(e){}}
+function chime(){let ok=false;try{if(SND){SND.muted=false;SND.currentTime=0;const p=SND.play();ok=true;if(p&&p.catch)p.catch(beep)}}catch(e){}if(!ok)beep()}
+function toggleSnd(){D.settings.snd=!D.settings.snd;save();setPage()}
+function testSnd(){sndUnlock();setTimeout(chime,150)}
 function setRest(v){D.settings.rest=Math.min(360,Math.max(90,+v||90));save();toast("Repos : "+restLab(D.settings.rest),"clock")}
 function restBar(){let el=$("rbar");if(!el){el=document.createElement("div");el.id="rbar";el.className="rbar";el.setAttribute("role","timer");document.body.appendChild(el)}return el}
 function restStart(name){const tot=Math.min(360,Math.max(90,+D.settings.rest||90));REST={end:Date.now()+tot*1000,tot,name};
- try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume()}catch(e){}
+ sndUnlock();
  const el=restBar();el.innerHTML=`<div class="rt"><small id="rtn"></small><b id="rtv"></b><div class="pbar y"><b id="rtb" style="width:100%"></b></div></div><button class="btn sm" id="rtp" onclick="restAdd()">+30 s</button><button class="btn sm r" onclick="restEnd(false)">Passer</button>`;
  el.classList.add("on");document.body.classList.add("resting");clearInterval(RT);RT=setInterval(restTick,250);restTick()}
 function restTick(){if(!REST)return;const ms=REST.end-Date.now();if(ms<=0){restEnd(true);return}const left=Math.ceil(ms/1000);
  const v=$("rtv"),b=$("rtb"),n=$("rtn"),p=$("rtp");if(!v)return;v.textContent=mmss(left);n.textContent="Repos · "+REST.name;b.style.width=Math.max(0,Math.min(100,ms/(REST.tot*10)))+"%";p.disabled=REST.tot+30>360}
 function restAdd(){if(!REST||REST.tot+30>360)return;REST.tot+=30;REST.end+=30000;restTick()}
 function restCancel(name){if(REST&&REST.name===name)restEnd(false)}
-function beep(){try{if(!AC)return;[0,.28,.56].forEach(d=>{const o=AC.createOscillator(),g=AC.createGain();o.type="sine";o.frequency.value=880;o.connect(g);g.connect(AC.destination);const t=AC.currentTime+d;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.22);o.start(t);o.stop(t+.25)})}catch(e){}}
+function beep(){try{if(!AC)return;[0,.28,.56].forEach(d=>{const o=AC.createOscillator(),g=AC.createGain();o.type="sine";o.frequency.value=880;o.connect(g);g.connect(AC.destination);const t=AC.currentTime+d;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.4,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.22);o.start(t);o.stop(t+.25)})}catch(e){}}
 function restEnd(nat){clearInterval(RT);RT=null;const was=REST;REST=null;const el=$("rbar");if(el)el.classList.remove("on");document.body.classList.remove("resting");
- if(nat&&was){try{if(navigator.vibrate)navigator.vibrate([250,120,250,120,400])}catch(e){}beep();toast("Repos terminé : à toi de jouer !","clock")}}
+ if(nat&&was){try{if(navigator.vibrate)navigator.vibrate([250,120,250,120,400])}catch(e){}if(D.settings.snd!==false)chime();toast("Repos terminé : à toi de jouer !","clock")}}
 document.addEventListener("visibilitychange",()=>{if(REST)restTick()});
 
 /* ---------- séance personnalisable : ajouter / retirer ---------- */
