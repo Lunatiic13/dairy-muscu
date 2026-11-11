@@ -317,7 +317,7 @@ const PMN={max:"Charge max",rep:"Reps totales"},LNAME={warm:"Échauffement",ex:"
 const seg=(items,cur,fn)=>`<div class="seg">${Object.keys(items).map(k=>`<button class="${k==cur?'on':''}" onclick="${fn}('${k}')">${items[k]}</button>`).join("")}</div>`;
 const back=()=>`<button class="btn sm back" onclick="go('profil')">${ic("chevL",18)} Profil</button>`;
 function tabs(){const cur=SUB.includes(mode)?"profil":mode;
- $("tabs").innerHTML=TABS.map(t=>`<button class="tab ${t[0]==cur?'on':''}" onclick="go('${t[0]}')" aria-label="${t[2]}">${ic(t[1],28,t[0]==cur?'fill':'')}<span>${t[2]}</span></button>`).join("")}
+ $("tabs").innerHTML=TABS.map(t=>`<button class="tab ${t[0]==cur?'on':''}" onclick="tapV();go('${t[0]}')" aria-label="${t[2]}">${ic(t[1],28,t[0]==cur?'fill':'')}<span>${t[2]}</span></button>`).join("")}
 function go(m){closeSheet();lbClose();wclose();if(m!==mode&&typeof history!=="undefined"&&history.pushState)history.pushState({m},"");mode=m;render()}
 if(typeof window.addEventListener==="function")window.addEventListener("popstate",e=>{mode=(e.state&&e.state.m)||"log";render()});
 function subProg(k){PM=k;prog()}
@@ -638,6 +638,7 @@ function setPage(){const s=D.settings,sup="wakeLock"in navigator;
  <p class="hint">${sup?"Fonction disponible sur ce navigateur. Elle se réactive quand tu reviens sur l’application.":"Non disponible sur ce navigateur."}</p></div>
  <div class="card"><h3 style="margin-bottom:8px">Zone sensible</h3><button class="btn r big" style="margin-top:0" onclick="if(confirm('Effacer toutes les données de cette version ? (Ton ancienne appli n’est pas touchée.)')){localStorage.removeItem(KEY);location.reload()}">Réinitialiser cette version</button></div>`}
 
+function tapV(){try{if(navigator.vibrate)navigator.vibrate(15)}catch(e){}}
 /* ---------- thème jour / nuit ---------- */
 function applyTheme(){const dk=!!D.settings.dark;document.documentElement.classList.toggle("dark",dk);const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",dk?"#15121f":"#f6f4fc")}
 function toggleDark(){D.settings.dark=!D.settings.dark;applyTheme();save();setPage()}
